@@ -121,7 +121,7 @@ export default function Inicio() {
           Bienvenido, {user.display_name}
         </h2>
         <p style={{ margin: 0, opacity: 0.9, fontSize: "0.95rem", lineHeight: 1.5 }}>
-          Sistema CMEP — Gestion de Certificados Medicos de Salud Mental.
+          MediCert — Sistema de Gestion de Certificados Medicos.
         </p>
       </div>
 

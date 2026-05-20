@@ -62,10 +62,10 @@ export default function Login() {
       }}>
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <h1 style={{ margin: 0, color: PRIMARY, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "0.05em" }}>
-            CMEP
+            MediCert
           </h1>
           <p style={{ margin: "0.5rem 0 0", color: "#666", fontSize: "0.9rem" }}>
-            Certificado Medico de Evaluacion Profesional
+            Sistema de Gestion de Certificados Medicos
           </p>
         </div>
 

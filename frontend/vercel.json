@@ -1,0 +1,15 @@
+{
+  "rewrites": [
+    { "source": "/auth/:path*", "destination": "https://medicert-backend.onrender.com/auth/:path*" },
+    { "source": "/solicitudes/:path*", "destination": "https://medicert-backend.onrender.com/solicitudes/:path*" },
+    { "source": "/archivos/:path*", "destination": "https://medicert-backend.onrender.com/archivos/:path*" },
+    { "source": "/promotores/:path*", "destination": "https://medicert-backend.onrender.com/promotores/:path*" },
+    { "source": "/empleados/:path*", "destination": "https://medicert-backend.onrender.com/empleados/:path*" },
+    { "source": "/admin/:path*", "destination": "https://medicert-backend.onrender.com/admin/:path*" },
+    { "source": "/reportes/:path*", "destination": "https://medicert-backend.onrender.com/reportes/:path*" },
+    { "source": "/servicios/:path*", "destination": "https://medicert-backend.onrender.com/servicios/:path*" },
+    { "source": "/health", "destination": "https://medicert-backend.onrender.com/health" },
+    { "source": "/version", "destination": "https://medicert-backend.onrender.com/version" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

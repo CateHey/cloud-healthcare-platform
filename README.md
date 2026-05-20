@@ -1,6 +1,8 @@
-# CMEP — Medical Certificate Management System
+# MediCert — Medical Certificate Management System
 
-Cloud-native web platform for managing professional medical certification requests. Supports multi-role workflows including **ADMIN, OPERATOR, MANAGER, and DOCTOR**. The entire solution is designed, deployed, and operated fully in the cloud (AWS).
+Cloud-native web platform for managing professional medical certification requests. Supports multi-role workflows including **ADMIN, OPERATOR, MANAGER, and DOCTOR**.
+
+> **Note:** This system was originally designed, deployed, and is currently running in production on **AWS** (App Runner, RDS MySQL, S3, CloudFront, Lambda, Secrets Manager, EventBridge). Full AWS deployment documentation is available in the [`docs/deployment/`](docs/deployment/) directory. For portfolio demonstration purposes, this version has been adapted to run on free-tier hosting services (Render + Vercel), as AWS infrastructure incurs ongoing costs. The architecture, codebase, and business logic remain identical to the production environment.
 
 ## Requirements
 
@@ -80,13 +82,12 @@ infra/
 - Frontend: React 18, React Router, TypeScript, Vite, Recharts  
 - Database: SQLite (development) / MySQL (production)  
 - Authentication: Server-side session management with httpOnly cookies  
-- Cloud Infrastructure: Fully deployed and operated on AWS  
 
 ---
 
 # Professional Experience Summary
 
-Designed and implemented a **production-ready, cloud-native medical certification management platform**, delivering a secure, scalable, and highly available solution deployed entirely on AWS infrastructure.
+Designed and implemented a **production-ready medical certification management platform**, delivering a secure, scalable, and highly available solution.
 
 ## Key Contributions
 
@@ -97,44 +98,22 @@ Designed and implemented a **production-ready, cloud-native medical certificatio
 - Implemented role-based workflow automation supporting multi-actor medical certification processes.
 - Designed modular UI architecture with state-driven authorization logic.
 
-### Cloud Architecture & AWS Deployment
+### Cloud Architecture & Deployment
 
-Architected and deployed the entire system as a **fully cloud-hosted, serverless-oriented architecture**, ensuring scalability, reliability, and operational efficiency.
+Architected and deployed the system with cloud-ready infrastructure, ensuring scalability, reliability, and operational efficiency.
 
-#### AWS Services Implemented
+#### Infrastructure
 
-- AWS App Runner  
-  - Containerized backend deployment  
-  - Automatic scaling and load balancing  
-  - Simplified CI/CD integration  
-
-- Amazon RDS (MySQL 8)  
-  - Production-grade relational database management  
-  - Migration strategy from SQLite development environment  
-  - Optimized indexing and query performance tuning  
-
-- Amazon S3  
-  - Secure document storage for medical certificates and attachments  
-  - Static hosting for frontend assets  
-  - Integrated backend validation and upload pipelines  
-
-- Amazon CloudFront CDN  
-  - Global low-latency delivery of the React SPA  
-  - Secure content distribution with caching optimization  
-
-- AWS Secrets Manager  
-  - Centralized credential and environment configuration management  
-  - Secure rotation and access control policies  
-
-- AWS Lambda + EventBridge  
-  - Automated background processing  
-  - Session cleanup and scheduled system maintenance tasks  
-  - Event-driven serverless job execution  
+- Containerized backend deployment with automatic scaling
+- Production-grade relational database management with migration strategy from SQLite
+- Secure document storage for medical certificates and attachments
+- Global low-latency delivery of the React SPA via CDN
+- Centralized credential and environment configuration management
+- Automated background processing and scheduled system maintenance tasks
 
 ### System Design & Security
 
 - Designed a multi-role workflow engine controlling medical certification lifecycle states.
-- Implemented secure document processing pipelines integrated with S3 storage.
+- Implemented secure document processing pipelines.
 - Developed session-based authentication with secure cookie handling.
 - Built scalable REST APIs supporting high concurrency and asynchronous operations.
-# aws_deployed_system

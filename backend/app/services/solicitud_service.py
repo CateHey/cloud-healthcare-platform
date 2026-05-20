@@ -176,9 +176,9 @@ async def create_promotor(
 
 
 def _generate_codigo(solicitud_id: int) -> str:
-    """Genera codigo legible CMEP-YYYY-NNNN."""
+    """Genera codigo legible MC-YYYY-NNNN."""
     year = utcnow().year
-    return f"CMEP-{year}-{solicitud_id:04d}"
+    return f"MC-{year}-{solicitud_id:04d}"
 
 
 async def create_solicitud(

@@ -25,7 +25,7 @@ from tests.integration.conftest import test_engine, TestSessionLocal
 
 
 def _cookies(session_id: str) -> dict:
-    return {"cmep_session": session_id}
+    return {"medicert_session": session_id}
 
 
 @pytest.fixture(autouse=True)

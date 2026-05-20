@@ -87,7 +87,7 @@ async def test_login_success(client: AsyncClient):
     assert data["ok"] is True
     assert data["data"]["user"]["user_email"] == "admin@cmep.local"
     assert "ADMIN" in data["data"]["user"]["roles"]
-    assert "cmep_session" in resp.cookies
+    assert "medicert_session" in resp.cookies
 
 
 @pytest.mark.anyio

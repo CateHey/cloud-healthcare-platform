@@ -52,7 +52,7 @@ export default function AppLayout({ user, onLogout }: Props) {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
           <h1 style={{ margin: 0, fontSize: "1.3rem", color: PRIMARY, fontWeight: 700, letterSpacing: "0.05em" }}>
-            CMEP
+            MediCert
           </h1>
           <nav style={{ display: "flex", gap: "0.25rem" }}>
             <NavLink to="/app" end style={({ isActive }) => navLinkStyle(isActive)}>

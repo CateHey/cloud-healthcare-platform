@@ -38,10 +38,21 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:3000"
 
     # Storage
-    FILE_STORAGE: str = "s3"
+    FILE_STORAGE: str = "local"
     UPLOAD_DIR: str = "uploads"
     S3_BUCKET: str = ""
-    S3_REGION: str = "us-east-1"    
+    S3_REGION: str = "us-east-1"
+
+    @property
+    def LOCAL_UPLOADS_PATH(self) -> str:
+        import os
+        base = self.UPLOAD_DIR
+        if not os.path.isabs(base):
+            backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            base = os.path.join(backend_dir, base)
+        os.makedirs(base, exist_ok=True)
+        return base
+
     # Cookies (produccion)
     COOKIE_DOMAIN: str = ""  # vacio = no domain attr; prod: ".tudominio.com"
 

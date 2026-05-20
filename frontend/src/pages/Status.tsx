@@ -38,7 +38,7 @@ export default function Status() {
 
   return (
     <div style={{ fontFamily: "system-ui", padding: "2rem", maxWidth: 480, margin: "0 auto" }}>
-      <h1>CMEP</h1>
+      <h1>MediCert</h1>
       <h2>Estado del Sistema</h2>
 
       <div

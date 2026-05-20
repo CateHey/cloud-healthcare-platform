@@ -156,7 +156,7 @@ export default function ReportesAdmin() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `reporte_cmep_${desde}_${hasta}.csv`;
+    a.download = `reporte_medicert_${desde}_${hasta}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

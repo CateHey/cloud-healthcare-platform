@@ -20,12 +20,12 @@ from app.api.admin import router as admin_router
 from app.api.reportes import router as reportes_router
 from app.api.servicios import router as servicios_router
 
-logger = logging.getLogger("cmep")
+logger = logging.getLogger("medicert")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("CMEP backend starting — env=%s", settings.APP_ENV)
+    logger.info("MediCert backend starting — env=%s", settings.APP_ENV)
     # SQLite local: crear tablas automaticamente si no existen
     if settings.is_sqlite:
         from app.database import Base, _get_engine
@@ -35,11 +35,11 @@ async def lifespan(app: FastAPI):
             await conn.run_sync(Base.metadata.create_all)
         logger.info("SQLite: tablas creadas/verificadas en %s", settings.DATABASE_URL)
     yield
-    logger.info("CMEP backend shutting down")
+    logger.info("MediCert backend shutting down")
 
 
 app = FastAPI(
-    title="CMEP API",
+    title="MediCert API",
     version=settings.APP_VERSION,
     lifespan=lifespan,
 )

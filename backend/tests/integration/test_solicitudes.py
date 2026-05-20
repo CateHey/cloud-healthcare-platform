@@ -168,7 +168,7 @@ async def setup_db():
 
 
 def _cookies(session_id: str) -> dict:
-    return {"cmep_session": session_id}
+    return {"medicert_session": session_id}
 
 
 # ── T022: POST /solicitudes ──────────────────────────────────────────
