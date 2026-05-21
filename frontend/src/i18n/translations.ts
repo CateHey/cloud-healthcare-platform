@@ -843,7 +843,11 @@ const translations = {
       confirmClose: "Confirmar cierre",
     },
   },
-} as const;
+};
 
-export type TranslationKeys = typeof translations.en;
-export default translations;
+type DeepStringify<T> = {
+  [K in keyof T]: T[K] extends string ? string : DeepStringify<T[K]>;
+};
+
+export type TranslationKeys = DeepStringify<typeof translations.en>;
+export default translations as Record<Lang, TranslationKeys>;

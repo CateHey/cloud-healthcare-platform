@@ -7,8 +7,9 @@ Ref: docs/claude/02_module_specs.md (M0)
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import settings
 from app.api.auth import router as auth_router
@@ -21,6 +22,13 @@ from app.api.reportes import router as reportes_router
 from app.api.servicios import router as servicios_router
 
 logger = logging.getLogger("medicert")
+
+
+class StripTrailingSlashMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path != "/" and request.url.path.endswith("/"):
+            request.scope["path"] = request.url.path.rstrip("/")
+        return await call_next(request)
 
 
 @asynccontextmanager
@@ -42,6 +50,7 @@ app = FastAPI(
     title="MediCert API",
     version=settings.APP_VERSION,
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 # --- CORS (Ref: risk R-001) ---
@@ -52,6 +61,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(StripTrailingSlashMiddleware)
 
 # --- Logging ---
 logging.basicConfig(
