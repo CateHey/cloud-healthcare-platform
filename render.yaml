@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: medicert-backend
+    name: cloud-healthcare-platform
     runtime: python
     region: oregon
     plan: free
