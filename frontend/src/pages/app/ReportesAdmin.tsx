@@ -6,6 +6,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { useLang } from "../../i18n/LanguageContext";
 import { api } from "../../services/api";
 import type { ReporteData, RankingEquipoItem } from "../../types/reportes";
 import type { EstadoOperativo } from "../../types/solicitud";
@@ -64,6 +65,7 @@ function formatCurrency(n: number): string {
 
 export default function ReportesAdmin() {
   const { user } = useAuth();
+  const { t } = useLang();
   const isAdmin = user?.roles.includes("ADMIN");
 
   // Filters
@@ -97,14 +99,14 @@ export default function ReportesAdmin() {
     } catch (e: unknown) {
       const err = e as { status?: number; detail?: string };
       if (err.status === 403) {
-        setError("No autorizado. Solo administradores pueden ver reportes.");
+        setError(t.reportes.unauthorized);
       } else {
-        setError("Error al cargar reportes.");
+        setError(t.reportes.errorLoading);
       }
     } finally {
       setLoading(false);
     }
-  }, [desde, hasta, estado, agrupacion]);
+  }, [desde, hasta, estado, agrupacion, t]);
 
   useEffect(() => {
     fetchReport();
@@ -122,32 +124,32 @@ export default function ReportesAdmin() {
     const rows: string[] = [];
 
     // KPIs
-    rows.push("== KPIs ==");
-    rows.push("Solicitudes,Cerradas,Ingresos,Ticket Promedio");
+    rows.push(t.reportes.csvKpis);
+    rows.push(`${t.reportes.csvHeaders.requests},${t.reportes.csvHeaders.closed},${t.reportes.csvHeaders.revenue},${t.reportes.csvHeaders.avgTicket}`);
     rows.push(
       `${data.kpis.solicitudes},${data.kpis.cerradas},${data.kpis.ingresos},${data.kpis.ticket_promedio}`
     );
     rows.push("");
 
     // Series
-    rows.push("== Series temporales ==");
-    rows.push("Periodo,Solicitudes,Ingresos");
+    rows.push(t.reportes.csvTimeSeries);
+    rows.push(`${t.reportes.csvHeaders.period},${t.reportes.csvHeaders.requests},${t.reportes.csvHeaders.revenue}`);
     for (const s of data.series) {
       rows.push(`${s.periodo},${s.solicitudes},${s.ingresos}`);
     }
     rows.push("");
 
     // Distribucion
-    rows.push("== Distribucion por estado ==");
-    rows.push("Estado,Cantidad");
+    rows.push(t.reportes.csvStatusDist);
+    rows.push(`${t.reportes.csvHeaders.status},${t.reportes.csvHeaders.count}`);
     for (const d of data.distribucion) {
       rows.push(`${d.estado},${d.cantidad}`);
     }
     rows.push("");
 
     // Promotores
-    rows.push("== Ranking promotores ==");
-    rows.push("Promotor,Clientes,Solicitudes,%Total");
+    rows.push(t.reportes.csvPromoterRank);
+    rows.push(`${t.reportes.csvHeaders.promoter},${t.reportes.csvHeaders.clients},${t.reportes.csvHeaders.requests},${t.reportes.csvHeaders.totalPct}`);
     for (const p of data.ranking_promotores) {
       rows.push(`"${p.nombre}",${p.clientes},${p.solicitudes},${p.porcentaje}`);
     }
@@ -165,8 +167,7 @@ export default function ReportesAdmin() {
   if (!isAdmin) {
     return (
       <div style={{ padding: "3rem", textAlign: "center", color: "#dc3545" }}>
-        <h2>No autorizado</h2>
-        <p>Solo los administradores pueden acceder a esta pagina.</p>
+        <h2>{t.reportes.unauthorized}</h2>
       </div>
     );
   }
@@ -183,7 +184,7 @@ export default function ReportesAdmin() {
           marginBottom: "1.5rem",
         }}
       >
-        <h2 style={{ margin: "0 0 1rem 0", fontSize: "1.3rem" }}>Reportes</h2>
+        <h2 style={{ margin: "0 0 1rem 0", fontSize: "1.3rem" }}>{t.reportes.title}</h2>
         <div
           style={{
             display: "flex",
@@ -192,25 +193,25 @@ export default function ReportesAdmin() {
             alignItems: "flex-end",
           }}
         >
-          <FilterField label="Desde">
+          <FilterField label={t.reportes.from}>
               <input
                 type="date"
-                placeholder="dd-mm-aaaa"
+                placeholder={t.reportes.datePlaceholder}
                 value={desde}
                 onChange={(e) => setDesde(e.target.value)}
                 style={inputStyle}
               />
           </FilterField>
-          <FilterField label="Hasta">
+          <FilterField label={t.reportes.to}>
               <input
                 type="date"
-                placeholder="dd-mm-aaaa"
+                placeholder={t.reportes.datePlaceholder}
                 value={hasta}
                 onChange={(e) => setHasta(e.target.value)}
                 style={inputStyle}
               />
           </FilterField>
-          <FilterField label="Estado">
+          <FilterField label={t.reportes.status}>
             <select
               value={estado}
               onChange={(e) => setEstado(e.target.value)}
@@ -224,21 +225,21 @@ export default function ReportesAdmin() {
               ))}
             </select>
           </FilterField>
-          <FilterField label="Agrupacion">
+          <FilterField label={t.reportes.grouping}>
             <select
               value={agrupacion}
               onChange={(e) => setAgrupacion(e.target.value)}
               style={inputStyle}
             >
-              <option value="mensual">Mensual</option>
-              <option value="semanal">Semanal</option>
+              <option value="mensual">{t.reportes.monthly}</option>
+              <option value="semanal">{t.reportes.weekly}</option>
             </select>
           </FilterField>
           <button onClick={exportCSV} disabled={!data} style={btnStyle}>
-            Exportar CSV
+            {t.reportes.exportCsv}
           </button>
           <button onClick={resetFilters} style={{ ...btnStyle, background: "rgba(255,255,255,0.2)" }}>
-            Reset
+            {t.common.reset}
           </button>
         </div>
       </div>
@@ -261,7 +262,7 @@ export default function ReportesAdmin() {
       {/* ── Loading ── */}
       {loading && (
         <div style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
-          Cargando reportes...
+          {t.reportes.loadingReports}
         </div>
       )}
 
@@ -275,7 +276,7 @@ export default function ReportesAdmin() {
             fontStyle: "italic",
           }}
         >
-          No hay datos para el rango/estado seleccionado.
+          {t.reportes.noData}
         </div>
       )}
 
@@ -290,10 +291,10 @@ export default function ReportesAdmin() {
               marginBottom: "1.5rem",
             }}
           >
-            <KpiCard title="Solicitudes" value={String(data.kpis.solicitudes)} />
-            <KpiCard title="Cerradas" value={String(data.kpis.cerradas)} />
-            <KpiCard title="Ingresos" value={formatCurrency(data.kpis.ingresos)} />
-            <KpiCard title="Ticket promedio" value={formatCurrency(data.kpis.ticket_promedio)} />
+            <KpiCard title={t.reportes.requests} value={String(data.kpis.solicitudes)} />
+            <KpiCard title={t.reportes.closed} value={String(data.kpis.cerradas)} />
+            <KpiCard title={t.reportes.revenue} value={formatCurrency(data.kpis.ingresos)} />
+            <KpiCard title={t.reportes.avgTicket} value={formatCurrency(data.kpis.ticket_promedio)} />
           </div>
 
           {/* ── Charts: Solicitudes + Ingresos ── */}
@@ -305,7 +306,7 @@ export default function ReportesAdmin() {
               marginBottom: "1.5rem",
             }}
           >
-            <ChartSection title="Solicitudes en el tiempo">
+            <ChartSection title={t.reportes.requestsOverTime}>
               {data.series.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={data.series}>
@@ -317,11 +318,11 @@ export default function ReportesAdmin() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <EmptyChart />
+                <EmptyChart label={t.common.noData} />
               )}
             </ChartSection>
 
-            <ChartSection title="Ingresos en el tiempo">
+            <ChartSection title={t.reportes.revenueOverTime}>
               {data.series.length > 0 ? (
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={data.series}>
@@ -333,13 +334,13 @@ export default function ReportesAdmin() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <EmptyChart />
+                <EmptyChart label={t.common.noData} />
               )}
             </ChartSection>
           </div>
 
           {/* ── Distribucion por estado ── */}
-          <ChartSection title="Distribucion por estado" style={{ marginBottom: "1.5rem" }}>
+          <ChartSection title={t.reportes.statusDistribution} style={{ marginBottom: "1.5rem" }}>
             {data.distribucion.some((d) => d.cantidad > 0) ? (
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={data.distribucion} layout="vertical">
@@ -358,7 +359,7 @@ export default function ReportesAdmin() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <EmptyChart />
+              <EmptyChart label={t.common.noData} />
             )}
           </ChartSection>
 
@@ -373,13 +374,13 @@ export default function ReportesAdmin() {
           >
             {/* Promotores */}
             <div style={sectionStyle}>
-              <h3 style={sectionTitleStyle}>Ranking Promotores</h3>
+              <h3 style={sectionTitleStyle}>{t.reportes.promoterRanking}</h3>
               {data.ranking_promotores.length > 0 ? (
                 <div style={{ overflowX: "auto" }}>
                   <table style={tableStyle}>
                     <thead>
                       <tr>
-                        {["Promotor", "Clientes", "Solicitudes", "% Total"].map((h) => (
+                        {[t.reportes.csvHeaders.promoter, t.reportes.csvHeaders.clients, t.reportes.requests, t.reportes.csvHeaders.totalPct].map((h) => (
                           <th key={h} style={thStyle}>
                             {h}
                           </th>
@@ -399,13 +400,13 @@ export default function ReportesAdmin() {
                   </table>
                 </div>
               ) : (
-                <p style={emptyStyle}>Sin datos de promotores en este rango.</p>
+                <p style={emptyStyle}>{t.reportes.noPromoterData}</p>
               )}
             </div>
 
             {/* Equipo */}
             <div style={sectionStyle}>
-              <h3 style={sectionTitleStyle}>Ranking Equipo</h3>
+              <h3 style={sectionTitleStyle}>{t.reportes.teamRanking}</h3>
               <div style={{ display: "flex", gap: "0.25rem", marginBottom: "0.75rem" }}>
                 {(["gestores", "medicos", "operadores"] as RolTab[]).map((tab) => (
                   <button
@@ -427,7 +428,7 @@ export default function ReportesAdmin() {
                   </button>
                 ))}
               </div>
-              <EquipoTable items={data.ranking_equipo[equipoTab]} />
+              <EquipoTable items={data.ranking_equipo[equipoTab]} t={t} />
             </div>
           </div>
         </>
@@ -481,7 +482,7 @@ function ChartSection({
   );
 }
 
-function EmptyChart() {
+function EmptyChart({ label }: { label: string }) {
   return (
     <div
       style={{
@@ -493,21 +494,21 @@ function EmptyChart() {
         fontStyle: "italic",
       }}
     >
-      Sin datos
+      {label}
     </div>
   );
 }
 
-function EquipoTable({ items }: { items: RankingEquipoItem[] }) {
+function EquipoTable({ items, t }: { items: RankingEquipoItem[]; t: ReturnType<typeof import("../../i18n/LanguageContext").useLang>["t"] }) {
   if (items.length === 0) {
-    return <p style={emptyStyle}>Sin datos para este rol en el rango.</p>;
+    return <p style={emptyStyle}>{t.reportes.noTeamData}</p>;
   }
   return (
     <div style={{ overflowX: "auto" }}>
       <table style={tableStyle}>
         <thead>
           <tr>
-            {["Usuario", "Solicitudes", "Cerradas", "Ultima actividad"].map((h) => (
+            {[t.reportes.user, t.reportes.requests, t.reportes.closed, t.reportes.lastActivity].map((h) => (
               <th key={h} style={thStyle}>
                 {h}
               </th>

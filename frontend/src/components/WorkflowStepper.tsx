@@ -5,6 +5,7 @@
  */
 
 import type { EstadoOperativo } from "../types/solicitud";
+import { useLang } from "../i18n/LanguageContext";
 
 interface WorkflowStepperProps {
   estadoActual: EstadoOperativo;
@@ -12,18 +13,14 @@ interface WorkflowStepperProps {
 
 type PhaseStatus = "completed" | "current" | "pending";
 
-const PHASES: { key: EstadoOperativo; label: string; description: string }[] = [
-  { key: "REGISTRADO", label: "Registrado", description: "Solicitud creada. Falta asignar un gestor." },
-  { key: "ASIGNADO_GESTOR", label: "Gestor asignado", description: "Gestor asignado. Falta registrar el pago." },
-  { key: "PAGADO", label: "Pagado", description: "Pago registrado. Falta asignar un medico." },
-  { key: "ASIGNADO_MEDICO", label: "Medico asignado", description: "Medico asignado. Pendiente de evaluacion y cierre." },
-  { key: "CERRADO", label: "Cerrado", description: "Solicitud completada y cerrada." },
-];
+function getPhaseIndex(key: string, phases: { key: string }[]) {
+  return phases.findIndex((p) => p.key === key);
+}
 
-function getPhaseStatus(phaseKey: EstadoOperativo, estadoActual: EstadoOperativo): PhaseStatus {
+function getPhaseStatus(phaseKey: string, estadoActual: EstadoOperativo, phases: { key: string }[]): PhaseStatus {
   if (estadoActual === "CANCELADO") return "pending";
-  const phaseIndex = PHASES.findIndex((p) => p.key === phaseKey);
-  const currentIndex = PHASES.findIndex((p) => p.key === estadoActual);
+  const phaseIndex = getPhaseIndex(phaseKey, phases);
+  const currentIndex = getPhaseIndex(estadoActual, phases);
   if (phaseIndex < currentIndex) return "completed";
   if (phaseIndex === currentIndex) return "current";
   return "pending";
@@ -36,14 +33,24 @@ const COLORS = {
 };
 
 export default function WorkflowStepper({ estadoActual }: WorkflowStepperProps) {
+  const { t } = useLang();
+
+  const PHASES: { key: EstadoOperativo; label: string; description: string }[] = [
+    { key: "REGISTRADO", label: t.workflow.registered, description: t.workflow.registeredDesc },
+    { key: "ASIGNADO_GESTOR", label: t.workflow.managerAssigned, description: t.workflow.managerAssignedDesc },
+    { key: "PAGADO", label: t.workflow.paid, description: t.workflow.paidDesc },
+    { key: "ASIGNADO_MEDICO", label: t.workflow.doctorAssigned, description: t.workflow.doctorAssignedDesc },
+    { key: "CERRADO", label: t.workflow.closed, description: t.workflow.closedDesc },
+  ];
+
   return (
     <div style={{ marginBottom: "1rem" }}>
       {/* Stepper row */}
       <div style={{ display: "flex", alignItems: "flex-start" }}>
         {PHASES.map((phase, index) => {
-          const status = getPhaseStatus(phase.key, estadoActual);
+          const status = getPhaseStatus(phase.key, estadoActual, PHASES);
           const prevPhase = index > 0 ? PHASES[index - 1]! : undefined;
-          const prevStatus = prevPhase ? getPhaseStatus(prevPhase.key, estadoActual) : null;
+          const prevStatus = prevPhase ? getPhaseStatus(prevPhase.key, estadoActual, PHASES) : null;
 
           return (
             <div key={phase.key} style={{ display: "contents" }}>
@@ -89,7 +96,7 @@ export default function WorkflowStepper({ estadoActual }: WorkflowStepperProps) 
                     flexShrink: 0,
                   }}
                 >
-                  {status === "completed" ? "\u2713" : index + 1}
+                  {status === "completed" ? "✓" : index + 1}
                 </div>
 
                 {/* Label */}
@@ -140,7 +147,7 @@ export default function WorkflowStepper({ estadoActual }: WorkflowStepperProps) 
             textAlign: "center",
           }}
         >
-          CANCELADA — Solicitud cancelada.
+          {t.workflow.cancelledBanner}
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import {
   blockStyle, blockTitleStyle, statusDotStyle, labelStyle, valueStyle,
   inputStyle, actionBtnStyle, disabledBtnStyle, cancelBtnStyle, helperTextStyle,
 } from "./detailStyles";
+import { useLang } from "../../../i18n/LanguageContext";
 
 type ActionModal = string | null;
 
@@ -29,6 +30,7 @@ export default function BlockEvaluacion({
   actionComentario, onActionComentarioChange, actionLoading,
   onOpenModal, onCloseModal, onExecuteAction, onSaveEstadoCertificado,
 }: BlockEvaluacionProps) {
+  const { t } = useLang();
   const state = getEvaluacionState(detail);
   const blockedText = getEvaluacionBlockedText(detail);
   const terminal = isTerminal(detail);
@@ -38,11 +40,11 @@ export default function BlockEvaluacion({
 
   const handleCerrarClick = () => {
     const faltantes: string[] = [];
-    if (!detail.asignaciones_vigentes.GESTOR) faltantes.push("Gestor asignado");
-    if (!detail.tipo_atencion) faltantes.push("Tipo de atencion");
-    if (detail.pagos.length === 0) faltantes.push("Al menos 1 pago registrado");
-    if (!detail.asignaciones_vigentes.MEDICO) faltantes.push("Medico asignado");
-    if (!detail.estado_certificado) faltantes.push("Estado de certificado");
+    if (!detail.asignaciones_vigentes.GESTOR) faltantes.push(t.evaluacion.reqManager);
+    if (!detail.tipo_atencion) faltantes.push(t.evaluacion.reqCareType);
+    if (detail.pagos.length === 0) faltantes.push(t.evaluacion.reqPayment);
+    if (!detail.asignaciones_vigentes.MEDICO) faltantes.push(t.evaluacion.reqDoctor);
+    if (!detail.estado_certificado) faltantes.push(t.evaluacion.reqCertStatus);
 
     if (faltantes.length > 0) {
       setCerrarFaltantes(faltantes);
@@ -56,7 +58,7 @@ export default function BlockEvaluacion({
     <div style={blockStyle(state)}>
       <div style={blockTitleStyle}>
         <span style={statusDotStyle(state)} />
-        Evaluacion medica
+        {t.evaluacion.title}
         {blockedText && (
           <span style={{ ...helperTextStyle, marginLeft: "auto", marginTop: 0 }}>{blockedText}</span>
         )}
@@ -65,14 +67,14 @@ export default function BlockEvaluacion({
       {/* Info row */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "0.75rem" }}>
         <div>
-          <span style={labelStyle}>Medico asignado: </span>
+          <span style={labelStyle}>{t.evaluacion.assignedDoctor} </span>
           <span style={valueStyle}>
-            {detail.asignaciones_vigentes.MEDICO?.nombre ?? "Sin asignar"}
+            {detail.asignaciones_vigentes.MEDICO?.nombre ?? t.gestion.notAssigned}
           </span>
         </div>
         {/* Estado certificado select (functional — saves via PATCH) */}
         <div style={{ marginBottom: "0.01rem" }}>
-          <span style={labelStyle}>Estado certificado: </span>
+          <span style={labelStyle}>{t.evaluacion.certificateStatus} </span>
           <select
             disabled={isBlocked || terminal || !can("EDITAR_DATOS")}
             value={detail.estado_certificado ?? ""}
@@ -90,13 +92,13 @@ export default function BlockEvaluacion({
               }
             }}
           >
-            <option value="">Sin definir</option>
-            <option value="APROBADO">APROBADO</option>
-            <option value="OBSERVADO">OBSERVADO</option>
+            <option value="">{t.gestion.undefined}</option>
+            <option value="APROBADO">{t.evaluacion.approved}</option>
+            <option value="OBSERVADO">{t.evaluacion.observed}</option>
           </select>
           {isBlocked && (
             <div style={helperTextStyle}>
-              Disponible cuando el pago este registrado y el medico asignado.
+              {t.evaluacion.availableWhen}
             </div>
           )}
         </div>
@@ -110,17 +112,17 @@ export default function BlockEvaluacion({
             onClick={() => onOpenModal(can("CAMBIAR_MEDICO") ? "cambiar_medico" : "asignar_medico")}
             style={actionBtnStyle("#6f42c1")}
           >
-            {detail.asignaciones_vigentes.MEDICO ? "Cambiar medico" : "Asignar medico"}
+            {detail.asignaciones_vigentes.MEDICO ? t.evaluacion.changeDoctor : t.evaluacion.assignDoctor}
           </button>
         ) : (
           <div>
             <button disabled style={disabledBtnStyle()}>
-              {detail.asignaciones_vigentes.MEDICO ? "Cambiar medico" : "Asignar medico"}
+              {detail.asignaciones_vigentes.MEDICO ? t.evaluacion.changeDoctor : t.evaluacion.assignDoctor}
             </button>
             <div style={helperTextStyle}>
               {state === "blocked"
-                ? "Requiere pago registrado."
-                : terminal ? "Solicitud finalizada." : "No disponible."}
+                ? t.evaluacion.requiresPayment
+                : terminal ? t.evaluacion.requestCompleted : t.gestion.notAvailable}
             </div>
           </div>
         )}
@@ -128,15 +130,15 @@ export default function BlockEvaluacion({
         {/* Cerrar solicitud */}
         {can("CERRAR") ? (
           <button onClick={handleCerrarClick} style={actionBtnStyle("#0d9488")}>
-            Cerrar solicitud
+            {t.evaluacion.closeRequest}
           </button>
         ) : (
           <div>
-            <button disabled style={disabledBtnStyle()}>Cerrar solicitud</button>
+            <button disabled style={disabledBtnStyle()}>{t.evaluacion.closeRequest}</button>
             <div style={helperTextStyle}>
               {detail.estado_operativo === "CERRADO"
-                ? "Ya cerrada."
-                : terminal ? "Solicitud cancelada." : "No disponible en este momento."}
+                ? t.evaluacion.alreadyClosed
+                : terminal ? t.evaluacion.requestCancelled : t.gestion.notAvailable}
             </div>
           </div>
         )}
@@ -153,7 +155,7 @@ export default function BlockEvaluacion({
           fontSize: "0.85rem",
           color: "#856404",
         }}>
-          <strong>No se puede cerrar aun. Falta:</strong>
+          <strong>{t.evaluacion.cannotCloseYet}</strong>
           <ul style={{ margin: "0.35rem 0 0", paddingLeft: "1.25rem" }}>
             {cerrarFaltantes.map((f) => (
               <li key={f}>{f}</li>
@@ -169,13 +171,13 @@ export default function BlockEvaluacion({
           background: "rgba(255,255,255,0.7)", borderRadius: 6, border: "1px solid #c5b3e6",
         }}>
           <h4 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem" }}>
-            {activeModal === "asignar_medico" ? "Asignar medico" : "Cambiar medico"}
+            {activeModal === "asignar_medico" ? t.evaluacion.assignDoctorTitle : t.evaluacion.changeDoctorTitle}
           </h4>
           <div style={{ marginBottom: "0.5rem" }}>
-            <label style={labelStyle}>Medico *</label>
+            <label style={labelStyle}>{t.evaluacion.doctorLabel}</label>
             <select value={personaId} onChange={(e) => onPersonaIdChange(e.target.value)}
               style={{ ...inputStyle, maxWidth: 350 }}>
-              <option value="">-- Seleccionar medico --</option>
+              <option value="">{t.evaluacion.selectDoctor}</option>
               {medicos.map((m) => (
                 <option key={m.persona_id} value={m.persona_id}>{m.nombre}</option>
               ))}
@@ -188,9 +190,9 @@ export default function BlockEvaluacion({
                 { persona_id_medico: parseInt(personaId) }
               )}
               style={actionBtnStyle(actionLoading ? "#6c757d" : "#6f42c1")}>
-              {actionLoading ? "Procesando..." : "Confirmar"}
+              {actionLoading ? t.common.processing : t.common.confirm}
             </button>
-            <button onClick={onCloseModal} style={cancelBtnStyle}>Cancelar</button>
+            <button onClick={onCloseModal} style={cancelBtnStyle}>{t.common.cancel}</button>
           </div>
         </div>
       )}
@@ -201,12 +203,12 @@ export default function BlockEvaluacion({
           marginTop: "0.75rem", padding: "0.75rem",
           background: "rgba(255,255,255,0.7)", borderRadius: 6, border: "1px solid #a3cfbb",
         }}>
-          <h4 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem" }}>Cerrar solicitud</h4>
+          <h4 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem" }}>{t.evaluacion.closeTitle}</h4>
           <p style={{ color: "#555", fontSize: "0.85rem", marginBottom: "0.5rem" }}>
-            Se marcara como ATENDIDA. Esta accion no se puede deshacer.
+            {t.evaluacion.closeWarning}
           </p>
           <div style={{ marginBottom: "0.5rem" }}>
-            <label style={labelStyle}>Comentario (opcional)</label>
+            <label style={labelStyle}>{t.evaluacion.closeComment}</label>
             <input value={actionComentario} onChange={(e) => onActionComentarioChange(e.target.value)}
               style={{ ...inputStyle, maxWidth: 400 }} />
           </div>
@@ -214,9 +216,9 @@ export default function BlockEvaluacion({
             <button disabled={actionLoading}
               onClick={() => onExecuteAction("cerrar", { comentario: actionComentario || undefined })}
               style={actionBtnStyle(actionLoading ? "#6c757d" : "#0d9488")}>
-              {actionLoading ? "Procesando..." : "Confirmar cierre"}
+              {actionLoading ? t.common.processing : t.evaluacion.confirmClose}
             </button>
-            <button onClick={onCloseModal} style={cancelBtnStyle}>Cancelar</button>
+            <button onClick={onCloseModal} style={cancelBtnStyle}>{t.common.cancel}</button>
           </div>
         </div>
       )}

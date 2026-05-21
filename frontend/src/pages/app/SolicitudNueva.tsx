@@ -10,6 +10,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
+import { useLang } from "../../i18n/LanguageContext";
 import type { ApiResponse } from "../../types/auth";
 import type { CreateSolicitudRequest, PromotorListItem } from "../../types/solicitud";
 
@@ -36,6 +37,7 @@ const fieldGroupStyle: React.CSSProperties = {
 
 export default function SolicitudNueva() {
   const navigate = useNavigate();
+  const { t } = useLang();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -111,11 +113,11 @@ export default function SolicitudNueva() {
 
     // Validacion local minima
     if (!cliNumDoc.trim() || !cliNombres.trim() || !cliApellidos.trim()) {
-      setError("Complete los datos obligatorios del cliente.");
+      setError(t.solicitudNueva.clientValidation);
       return;
     }
     if (conApoderado && (!apoNumDoc.trim() || !apoNombres.trim() || !apoApellidos.trim())) {
-      setError("Complete los datos obligatorios del apoderado.");
+      setError(t.solicitudNueva.representativeValidation);
       return;
     }
 
@@ -193,9 +195,9 @@ export default function SolicitudNueva() {
           errs[d.loc.join(".")] = d.msg;
         }
         setFieldErrors(errs);
-        setError("Corrige los campos con errores.");
+        setError(t.solicitudNueva.fixErrors);
       } else {
-        setError(typeof e.detail === "string" ? e.detail : "Error al crear solicitud");
+        setError(typeof e.detail === "string" ? e.detail : t.solicitudNueva.errorCreating);
       }
     } finally {
       setSubmitting(false);
@@ -204,7 +206,7 @@ export default function SolicitudNueva() {
 
   return (
     <div style={{ maxWidth: 700 }}>
-      <h2>Registrar Solicitud</h2>
+      <h2>{t.solicitudNueva.title}</h2>
 
       {error && (
         <div style={{ padding: "0.75rem", background: "#f8d7da", color: "#721c24", borderRadius: 4, marginBottom: "1rem" }}>
@@ -215,17 +217,17 @@ export default function SolicitudNueva() {
       <form onSubmit={handleSubmit}>
         {/* ── Cliente ── */}
         <fieldset style={{ border: "1px solid #dee2e6", borderRadius: 4, padding: "1rem", marginBottom: "1rem", background: "#e8f0fe" }}>
-          <legend style={{ fontWeight: 700 }}>Datos del Cliente *</legend>
+          <legend style={{ fontWeight: 700 }}>{t.solicitudNueva.clientData}</legend>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "0.75rem" }}>
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>Tipo documento *</label>
+              <label style={labelStyle}>{t.solicitudNueva.docType}</label>
               <select value={cliTipoDoc} onChange={(e) => setCliTipoDoc(e.target.value)} style={inputStyle}>
                 {DOCS_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>Numero documento *</label>
+              <label style={labelStyle}>{t.solicitudNueva.docNumber}</label>
               <input value={cliNumDoc} onChange={(e) => setCliNumDoc(e.target.value)} style={inputStyle} />
               {fieldErrors["body.cliente.numero_documento"] && (
                 <small style={{ color: "#dc3545" }}>{fieldErrors["body.cliente.numero_documento"]}</small>
@@ -235,33 +237,33 @@ export default function SolicitudNueva() {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>Nombres *</label>
+              <label style={labelStyle}>{t.solicitudNueva.firstName}</label>
               <input value={cliNombres} onChange={(e) => setCliNombres(e.target.value)} style={inputStyle} />
             </div>
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>Apellidos *</label>
+              <label style={labelStyle}>{t.solicitudNueva.lastName}</label>
               <input value={cliApellidos} onChange={(e) => setCliApellidos(e.target.value)} style={inputStyle} />
             </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>Celular</label>
+              <label style={labelStyle}>{t.solicitudNueva.phone}</label>
               <input value={cliCelular} onChange={(e) => setCliCelular(e.target.value)} style={inputStyle} />
             </div>
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>Email</label>
+              <label style={labelStyle}>{t.solicitudNueva.email}</label>
               <input type="email" value={cliEmail} onChange={(e) => setCliEmail(e.target.value)} style={inputStyle} />
             </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>Fecha de nacimiento</label>
+              <label style={labelStyle}>{t.solicitudNueva.birthDate}</label>
               <input type="date" placeholder="dd-mm-aaaa" value={cliFechaNacimiento} onChange={(e) => setCliFechaNacimiento(e.target.value)} style={inputStyle} />
             </div>
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>Direccion</label>
+              <label style={labelStyle}>{t.solicitudNueva.address}</label>
               <input value={cliDireccion} onChange={(e) => setCliDireccion(e.target.value)} style={inputStyle} />
             </div>
           </div>
@@ -276,56 +278,56 @@ export default function SolicitudNueva() {
               onChange={(e) => setConApoderado(e.target.checked)}
               style={{ marginRight: "0.5rem" }}
             />
-            Incluir apoderado
+            {t.solicitudNueva.includeRepresentative}
           </label>
         </div>
 
         {conApoderado && (
           <fieldset style={{ border: "1px solid #dee2e6", borderRadius: 4, padding: "1rem", marginBottom: "1rem", background: "#fff8e1" }}>
-            <legend style={{ fontWeight: 700 }}>Datos del Apoderado</legend>
+            <legend style={{ fontWeight: 700 }}>{t.solicitudNueva.representativeData}</legend>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "0.75rem" }}>
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>Tipo documento *</label>
+                <label style={labelStyle}>{t.solicitudNueva.docType}</label>
                 <select value={apoTipoDoc} onChange={(e) => setApoTipoDoc(e.target.value)} style={inputStyle}>
                   {DOCS_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>Numero documento *</label>
+                <label style={labelStyle}>{t.solicitudNueva.docNumber}</label>
                 <input value={apoNumDoc} onChange={(e) => setApoNumDoc(e.target.value)} style={inputStyle} />
               </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>Nombres *</label>
+                <label style={labelStyle}>{t.solicitudNueva.firstName}</label>
                 <input value={apoNombres} onChange={(e) => setApoNombres(e.target.value)} style={inputStyle} />
               </div>
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>Apellidos *</label>
+                <label style={labelStyle}>{t.solicitudNueva.lastName}</label>
                 <input value={apoApellidos} onChange={(e) => setApoApellidos(e.target.value)} style={inputStyle} />
               </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>Celular</label>
+                <label style={labelStyle}>{t.solicitudNueva.phone}</label>
                 <input value={apoCelular} onChange={(e) => setApoCelular(e.target.value)} style={inputStyle} />
               </div>
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>Email</label>
+                <label style={labelStyle}>{t.solicitudNueva.email}</label>
                 <input type="email" value={apoEmail} onChange={(e) => setApoEmail(e.target.value)} style={inputStyle} />
               </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>Fecha de nacimiento</label>
+                <label style={labelStyle}>{t.solicitudNueva.birthDate}</label>
                 <input type="date" placeholder="dd-mm-aaaa" value={apoFechaNacimiento} onChange={(e) => setApoFechaNacimiento(e.target.value)} style={inputStyle} />
               </div>
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>Direccion</label>
+                <label style={labelStyle}>{t.solicitudNueva.address}</label>
                 <input value={apoDireccion} onChange={(e) => setApoDireccion(e.target.value)} style={inputStyle} />
               </div>
             </div>
@@ -334,9 +336,9 @@ export default function SolicitudNueva() {
 
         {/* ── Promotor ── */}
         <fieldset style={{ border: "1px solid #dee2e6", borderRadius: 4, padding: "1rem", marginBottom: "1rem", background: "#e8f5e9" }}>
-          <legend style={{ fontWeight: 700 }}>Promotor (opcional)</legend>
+          <legend style={{ fontWeight: 700 }}>{t.solicitudNueva.promoterOptional}</legend>
           <div style={fieldGroupStyle}>
-            <label style={labelStyle}>Opcion</label>
+            <label style={labelStyle}>{t.solicitudNueva.option}</label>
             <select
               value={promotorMode}
               onChange={(e) => {
@@ -345,22 +347,22 @@ export default function SolicitudNueva() {
               }}
               style={inputStyle}
             >
-              <option value="none">Sin promotor</option>
-              {promotores.length > 0 && <option value="existing">Seleccionar existente</option>}
-              <option value="new">Registrar nuevo promotor</option>
+              <option value="none">{t.solicitudNueva.noPromoter}</option>
+              {promotores.length > 0 && <option value="existing">{t.solicitudNueva.selectExisting}</option>}
+              <option value="new">{t.solicitudNueva.registerNew}</option>
             </select>
           </div>
 
           {/* Existing promotor dropdown */}
           {promotorMode === "existing" && (
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>Seleccionar promotor</label>
+              <label style={labelStyle}>{t.solicitudNueva.selectPromoter}</label>
               <select
                 value={selectedPromotorId}
                 onChange={(e) => setSelectedPromotorId(e.target.value)}
                 style={inputStyle}
               >
-                <option value="">-- Seleccionar --</option>
+                <option value="">{t.solicitudNueva.selectDefault}</option>
                 {promotores.map((p) => (
                   <option key={p.promotor_id} value={p.promotor_id}>
                     {p.nombre} ({p.tipo_promotor})
@@ -375,11 +377,11 @@ export default function SolicitudNueva() {
           {promotorMode === "new" && (
             <div style={{ borderTop: "1px solid #eee", paddingTop: "0.75rem", marginTop: "0.5rem" }}>
               <div style={fieldGroupStyle}>
-                <label style={labelStyle}>Tipo de promotor *</label>
+                <label style={labelStyle}>{t.solicitudNueva.promoterType}</label>
                 <select value={promTipo} onChange={(e) => setPromTipo(e.target.value as "PERSONA" | "EMPRESA" | "OTROS")} style={inputStyle}>
-                  <option value="PERSONA">Persona</option>
-                  <option value="EMPRESA">Empresa</option>
-                  <option value="OTROS">Otros</option>
+                  <option value="PERSONA">{t.promotores.person}</option>
+                  <option value="EMPRESA">{t.promotores.company}</option>
+                  <option value="OTROS">{t.promotores.other}</option>
                 </select>
               </div>
 
@@ -388,24 +390,24 @@ export default function SolicitudNueva() {
                 <>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                     <div style={fieldGroupStyle}>
-                      <label style={labelStyle}>Nombres *</label>
+                      <label style={labelStyle}>{t.solicitudNueva.firstName}</label>
                       <input value={promNombres} onChange={(e) => setPromNombres(e.target.value)} style={inputStyle} />
                     </div>
                     <div style={fieldGroupStyle}>
-                      <label style={labelStyle}>Apellidos *</label>
+                      <label style={labelStyle}>{t.solicitudNueva.lastName}</label>
                       <input value={promApellidos} onChange={(e) => setPromApellidos(e.target.value)} style={inputStyle} />
                     </div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "0.75rem" }}>
                     <div style={fieldGroupStyle}>
-                      <label style={labelStyle}>Tipo doc</label>
+                      <label style={labelStyle}>{t.solicitudNueva.docTypeLabel}</label>
                       <select value={promTipoDoc} onChange={(e) => setPromTipoDoc(e.target.value)} style={inputStyle}>
                         {DOCS_TYPES.map((d) => <option key={d} value={d}>{d}</option>)}
                       </select>
                     </div>
                     <div style={fieldGroupStyle}>
-                      <label style={labelStyle}>Numero doc</label>
-                      <input value={promNumDoc} onChange={(e) => setPromNumDoc(e.target.value)} style={inputStyle} placeholder="Preferido pero no obligatorio" />
+                      <label style={labelStyle}>{t.solicitudNueva.docNumberLabel}</label>
+                      <input value={promNumDoc} onChange={(e) => setPromNumDoc(e.target.value)} style={inputStyle} placeholder={t.solicitudNueva.preferredNotRequired} />
                     </div>
                   </div>
                 </>
@@ -414,7 +416,7 @@ export default function SolicitudNueva() {
               {/* EMPRESA fields */}
               {promTipo === "EMPRESA" && (
                 <div style={fieldGroupStyle}>
-                  <label style={labelStyle}>Razon social *</label>
+                  <label style={labelStyle}>{t.promotores.companyName}</label>
                   <input value={promRazonSocial} onChange={(e) => setPromRazonSocial(e.target.value)} style={inputStyle} />
                 </div>
               )}
@@ -422,7 +424,7 @@ export default function SolicitudNueva() {
               {/* OTROS fields */}
               {promTipo === "OTROS" && (
                 <div style={fieldGroupStyle}>
-                  <label style={labelStyle}>Nombre del promotor *</label>
+                  <label style={labelStyle}>{t.promotores.otherName}</label>
                   <input value={promNombreOtros} onChange={(e) => setPromNombreOtros(e.target.value)} style={inputStyle} />
                 </div>
               )}
@@ -434,18 +436,18 @@ export default function SolicitudNueva() {
                   <input value={promRuc} onChange={(e) => setPromRuc(e.target.value)} style={inputStyle} />
                 </div>
                 <div style={fieldGroupStyle}>
-                  <label style={labelStyle}>Email</label>
+                  <label style={labelStyle}>{t.solicitudNueva.email}</label>
                   <input type="email" value={promEmail} onChange={(e) => setPromEmail(e.target.value)} style={inputStyle} />
                 </div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                 <div style={fieldGroupStyle}>
-                  <label style={labelStyle}>Celular</label>
+                  <label style={labelStyle}>{t.solicitudNueva.phone}</label>
                   <input value={promCelular} onChange={(e) => setPromCelular(e.target.value)} style={inputStyle} />
                 </div>
                 <div style={fieldGroupStyle}>
-                  <label style={labelStyle}>Fuente / referencia</label>
-                  <input value={promFuente} onChange={(e) => setPromFuente(e.target.value)} style={inputStyle} placeholder="Notaria, abogado, etc." />
+                  <label style={labelStyle}>{t.solicitudNueva.sourceReference}</label>
+                  <input value={promFuente} onChange={(e) => setPromFuente(e.target.value)} style={inputStyle} placeholder={t.solicitudNueva.sourcePlaceholder} />
                 </div>
               </div>
             </div>
@@ -454,11 +456,11 @@ export default function SolicitudNueva() {
 
         {/* ── Servicio ── */}
         <fieldset style={{ border: "1px solid #dee2e6", borderRadius: 4, padding: "1rem", marginBottom: "1rem" }}>
-          <legend style={{ fontWeight: 700 }}>Servicio *</legend>
+          <legend style={{ fontWeight: 700 }}>{t.solicitudNueva.service}</legend>
           <div style={fieldGroupStyle}>
-            <label style={labelStyle}>Seleccionar servicio</label>
+            <label style={labelStyle}>{t.solicitudNueva.selectService}</label>
             <select value={servicioId} onChange={(e) => setServicioId(e.target.value)} style={inputStyle}>
-              <option value="">-- Seleccionar servicio --</option>
+              <option value="">{t.solicitudNueva.selectServiceDefault}</option>
               {servicios.map((s) => (
                 <option key={s.servicio_id} value={s.servicio_id}>
                   {s.descripcion_servicio} — {s.moneda_tarifa} {s.tarifa_servicio}
@@ -470,7 +472,7 @@ export default function SolicitudNueva() {
 
         {/* ── Comentario ── */}
         <div style={fieldGroupStyle}>
-          <label style={labelStyle}>Comentario</label>
+          <label style={labelStyle}>{t.common.comment}</label>
           <textarea
             value={comentario}
             onChange={(e) => setComentario(e.target.value)}
@@ -494,7 +496,7 @@ export default function SolicitudNueva() {
               fontWeight: 600,
             }}
           >
-            {submitting ? "Registrando..." : "Registrar Solicitud"}
+            {submitting ? t.solicitudNueva.submitting : t.solicitudNueva.submit}
           </button>
           <button
             type="button"
@@ -508,7 +510,7 @@ export default function SolicitudNueva() {
               cursor: "pointer",
             }}
           >
-            Cancelar
+            {t.common.cancel}
           </button>
         </div>
       </form>

@@ -1,14 +1,6 @@
-/**
- * Layout principal para paginas privadas /app/*.
- * Ref: docs/source/06_ui_paginas_y_contratos.md — Menu Principal
- *
- * Reglas menu:
- * - Usuarios solo visible para ADMIN
- * - Reportes solo visible para ADMIN (MVP)
- */
-
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import type { UserDTO } from "../types/auth";
+import { useLang } from "../i18n/LanguageContext";
 
 interface Props {
   user: UserDTO;
@@ -31,6 +23,7 @@ const navLinkStyle = (isActive: boolean): React.CSSProperties => ({
 export default function AppLayout({ user, onLogout }: Props) {
   const navigate = useNavigate();
   const isAdmin = user.roles.includes("ADMIN");
+  const { lang, t, toggleLang } = useLang();
 
   const handleLogout = async () => {
     await onLogout();
@@ -39,7 +32,6 @@ export default function AppLayout({ user, onLogout }: Props) {
 
   return (
     <div style={{ fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif", maxWidth: 1500, margin: "0 auto", padding: "0 1rem" }}>
-      {/* Header */}
       <header
         style={{
           display: "flex",
@@ -56,27 +48,43 @@ export default function AppLayout({ user, onLogout }: Props) {
           </h1>
           <nav style={{ display: "flex", gap: "0.25rem" }}>
             <NavLink to="/app" end style={({ isActive }) => navLinkStyle(isActive)}>
-              Inicio
+              {t.nav.home}
             </NavLink>
             <NavLink to="/app/solicitudes" style={({ isActive }) => navLinkStyle(isActive)}>
-              Solicitudes
+              {t.nav.requests}
             </NavLink>
             <NavLink to="/app/promotores" style={({ isActive }) => navLinkStyle(isActive)}>
-              Promotores
+              {t.nav.promoters}
             </NavLink>
             {isAdmin && (
               <>
                 <NavLink to="/app/usuarios" style={({ isActive }) => navLinkStyle(isActive)}>
-                  Usuarios
+                  {t.nav.users}
                 </NavLink>
                 <NavLink to="/app/reportes-admin" style={({ isActive }) => navLinkStyle(isActive)}>
-                  Reportes
+                  {t.nav.reports}
                 </NavLink>
               </>
             )}
           </nav>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <button
+            onClick={toggleLang}
+            style={{
+              padding: "0.3rem 0.6rem",
+              cursor: "pointer",
+              border: `1px solid ${PRIMARY}`,
+              borderRadius: 4,
+              background: PRIMARY_LIGHT,
+              color: PRIMARY,
+              fontWeight: 600,
+              fontSize: "0.75rem",
+              letterSpacing: "0.03em",
+            }}
+          >
+            {lang === "en" ? "ES" : "EN"}
+          </button>
           <span
             style={{
               padding: "0.3rem 0.6rem",
@@ -102,12 +110,11 @@ export default function AppLayout({ user, onLogout }: Props) {
               fontSize: "0.85rem",
             }}
           >
-            Salir
+            {t.nav.logout}
           </button>
         </div>
       </header>
 
-      {/* Content */}
       <main style={{ padding: "1rem 0" }}>
         <Outlet />
       </main>

@@ -1,17 +1,8 @@
-/**
- * Pagina de Login.
- * Ref: docs/source/06_ui_paginas_y_contratos.md — Login
- *
- * Campos: email, password
- * POST /auth/login -> redirect /app
- * 401/422 -> "Credenciales invalidas"
- * 403 -> "Usuario suspendido"
- */
-
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useLang } from "../i18n/LanguageContext";
 
 const PRIMARY = "#1a3d5c";
 
@@ -22,6 +13,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { lang, t, toggleLang } = useLang();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -34,9 +26,9 @@ export default function Login() {
     } catch (err: unknown) {
       const e = err as { status?: number; detail?: string };
       if (e.status === 403) {
-        setError("Usuario suspendido. Contacte al administrador.");
+        setError(t.login.suspended);
       } else {
-        setError("Credenciales invalidas.");
+        setError(t.login.invalidCredentials);
       }
     } finally {
       setLoading(false);
@@ -59,13 +51,33 @@ export default function Login() {
         background: "#fff",
         borderRadius: 8,
         boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+        position: "relative",
       }}>
+        <button
+          onClick={toggleLang}
+          style={{
+            position: "absolute",
+            top: "1rem",
+            right: "1rem",
+            padding: "0.3rem 0.6rem",
+            cursor: "pointer",
+            border: `1px solid ${PRIMARY}`,
+            borderRadius: 4,
+            background: "#f8f9fa",
+            color: PRIMARY,
+            fontWeight: 600,
+            fontSize: "0.75rem",
+          }}
+        >
+          {lang === "en" ? "ES" : "EN"}
+        </button>
+
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <h1 style={{ margin: 0, color: PRIMARY, fontSize: "1.75rem", fontWeight: 700, letterSpacing: "0.05em" }}>
             MediCert
           </h1>
           <p style={{ margin: "0.5rem 0 0", color: "#666", fontSize: "0.9rem" }}>
-            Sistema de Gestion de Certificados Medicos
+            {t.login.subtitle}
           </p>
         </div>
 
@@ -94,7 +106,7 @@ export default function Login() {
 
           <div style={{ marginBottom: "1.25rem" }}>
             <label htmlFor="password" style={{ display: "block", marginBottom: 6, fontWeight: 500, fontSize: "0.85rem", color: "#333" }}>
-              Contrasena
+              {t.login.password}
             </label>
             <input
               id="password"
@@ -144,7 +156,7 @@ export default function Login() {
               fontWeight: 600,
             }}
           >
-            {loading ? "Ingresando..." : "Ingresar"}
+            {loading ? t.login.submitting : t.login.submit}
           </button>
         </form>
       </div>

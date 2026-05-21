@@ -6,6 +6,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { api } from "../../services/api";
+import { useLang } from "../../i18n/LanguageContext";
 import type { AdminUserDTO, CreateUserPayload, UpdateUserPayload } from "../../types/usuario";
 
 const PRIMARY = "#1a3d5c";
@@ -14,6 +15,7 @@ const ALL_ROLES = ["ADMIN", "OPERADOR", "GESTOR", "MEDICO"];
 type ModalType = "create" | "edit" | "reset_password" | null;
 
 export default function UsuariosLista() {
+  const { t } = useLang();
   const [users, setUsers] = useState<AdminUserDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,11 +53,11 @@ export default function UsuariosLista() {
       setUsers(res.data);
     } catch (err: unknown) {
       const e = err as { detail?: string };
-      setError(e.detail ?? "Error al cargar usuarios");
+      setError(e.detail ?? t.usuarios.errorLoading);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchUsers();
@@ -138,12 +140,12 @@ export default function UsuariosLista() {
       if (formTelefono.trim()) payload.telefono = formTelefono.trim();
 
       await api.post("/admin/usuarios", payload);
-      setSuccess("Usuario creado exitosamente");
+      setSuccess(t.usuarios.createSuccess);
       closeModal();
       fetchUsers();
     } catch (err: unknown) {
       const e = err as { detail?: string };
-      setError(e.detail ?? "Error al crear usuario");
+      setError(e.detail ?? t.usuarios.createError);
     }
   };
 
@@ -168,12 +170,12 @@ export default function UsuariosLista() {
       }
 
       await api.patch(`/admin/usuarios/${editingUser.user_id}`, payload);
-      setSuccess("Usuario actualizado exitosamente");
+      setSuccess(t.usuarios.updateSuccess);
       closeModal();
       fetchUsers();
     } catch (err: unknown) {
       const e = err as { detail?: string };
-      setError(e.detail ?? "Error al actualizar usuario");
+      setError(e.detail ?? t.usuarios.updateError);
     }
   };
 
@@ -186,26 +188,30 @@ export default function UsuariosLista() {
       await api.post(`/admin/usuarios/${editingUser.user_id}/reset-password`, {
         new_password: formPassword,
       });
-      setSuccess(`Password reseteado para ${editingUser.user_email}`);
+      setSuccess(`${t.usuarios.resetSuccess} ${editingUser.user_email}`);
       closeModal();
     } catch (err: unknown) {
       const e = err as { detail?: string };
-      setError(e.detail ?? "Error al resetear password");
+      setError(e.detail ?? t.usuarios.resetError);
     }
   };
 
   const handleToggleActive = async (user: AdminUserDTO) => {
-    const action = user.is_active ? "suspender" : "reactivar";
-    if (!confirm(`¿Seguro que deseas ${action} a ${user.nombres} ${user.apellidos}?`)) return;
+    const action = user.is_active ? t.usuarios.actionSuspend : t.usuarios.actionReactivate;
+    const confirmMsg = t.usuarios.suspendConfirm
+      .replace("{action}", action)
+      .replace("{name}", `${user.nombres} ${user.apellidos}`);
+    if (!confirm(confirmMsg)) return;
     setError(null);
     setSuccess(null);
     try {
       await api.patch(`/admin/usuarios/${user.user_id}`, { is_active: !user.is_active });
-      setSuccess(`Usuario ${user.is_active ? "suspendido" : "reactivado"} exitosamente`);
+      const state = user.is_active ? t.usuarios.actionSuspend : t.usuarios.actionReactivate;
+      setSuccess(t.usuarios.suspendSuccess.replace("{state}", state));
       fetchUsers();
     } catch (err: unknown) {
       const e = err as { detail?: string };
-      setError(e.detail ?? `Error al ${action} usuario`);
+      setError(e.detail ?? t.usuarios.suspendError.replace("{action}", action));
     }
   };
 
@@ -271,9 +277,9 @@ export default function UsuariosLista() {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-        <h2 style={{ margin: 0, color: PRIMARY }}>Usuarios</h2>
+        <h2 style={{ margin: 0, color: PRIMARY }}>{t.usuarios.title}</h2>
         <button onClick={openCreate} style={btnPrimary}>
-          + Nuevo Usuario
+          {t.usuarios.newUser}
         </button>
       </div>
 
@@ -291,19 +297,19 @@ export default function UsuariosLista() {
 
       {/* Table */}
       {loading ? (
-        <p style={{ color: "#666" }}>Cargando...</p>
+        <p style={{ color: "#666" }}>{t.common.loading}</p>
       ) : users.length === 0 ? (
-        <p style={{ color: "#666" }}>No hay usuarios registrados.</p>
+        <p style={{ color: "#666" }}>{t.usuarios.noUsers}</p>
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
           <thead>
             <tr style={{ borderBottom: "2px solid #dee2e6", textAlign: "left" }}>
-              <th style={{ padding: "0.5rem" }}>Email</th>
-              <th style={{ padding: "0.5rem" }}>Nombre</th>
-              <th style={{ padding: "0.5rem" }}>Documento</th>
-              <th style={{ padding: "0.5rem" }}>Roles</th>
-              <th style={{ padding: "0.5rem" }}>Estado</th>
-              <th style={{ padding: "0.5rem" }}>Acciones</th>
+              <th style={{ padding: "0.5rem" }}>{t.common.email}</th>
+              <th style={{ padding: "0.5rem" }}>{t.common.name}</th>
+              <th style={{ padding: "0.5rem" }}>{t.common.document}</th>
+              <th style={{ padding: "0.5rem" }}>{t.usuarios.roles}</th>
+              <th style={{ padding: "0.5rem" }}>{t.common.status}</th>
+              <th style={{ padding: "0.5rem" }}>{t.common.actions}</th>
             </tr>
           </thead>
           <tbody>
@@ -350,12 +356,12 @@ export default function UsuariosLista() {
                       background: user.is_active ? "#198754" : "#dc3545",
                     }}
                   >
-                    {user.is_active ? "ACTIVO" : "SUSPENDIDO"}
+                    {user.is_active ? t.usuarios.active : t.usuarios.suspended}
                   </span>
                 </td>
                 <td style={{ padding: "0.5rem" }}>
                   <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
-                    <button onClick={() => openEdit(user)} style={btnSmall}>Editar</button>
+                    <button onClick={() => openEdit(user)} style={btnSmall}>{t.common.edit}</button>
                     <button
                       onClick={() => handleToggleActive(user)}
                       style={{
@@ -364,10 +370,10 @@ export default function UsuariosLista() {
                         borderColor: user.is_active ? "#dc3545" : "#198754",
                       }}
                     >
-                      {user.is_active ? "Suspender" : "Reactivar"}
+                      {user.is_active ? t.usuarios.suspend : t.usuarios.reactivate}
                     </button>
                     <button onClick={() => openResetPassword(user)} style={btnSmall}>
-                      Reset Pass
+                      {t.usuarios.resetPass}
                     </button>
                   </div>
                 </td>
@@ -381,11 +387,11 @@ export default function UsuariosLista() {
       {activeModal === "create" && (
         <div style={overlayStyle} onClick={closeModal}>
           <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ margin: "0 0 1rem 0", color: PRIMARY }}>Nuevo Usuario</h3>
+            <h3 style={{ margin: "0 0 1rem 0", color: PRIMARY }}>{t.usuarios.newUserTitle}</h3>
             <form onSubmit={handleCreate}>
               <div style={{ display: "grid", gap: "0.75rem" }}>
                 <div>
-                  <label style={labelStyle}>Email *</label>
+                  <label style={labelStyle}>{`${t.common.email} *`}</label>
                   <input
                     type="email"
                     value={formEmail}
@@ -395,7 +401,7 @@ export default function UsuariosLista() {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Password *</label>
+                  <label style={labelStyle}>{t.usuarios.password}</label>
                   <input
                     type="password"
                     value={formPassword}
@@ -407,7 +413,7 @@ export default function UsuariosLista() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
                   <div>
-                    <label style={labelStyle}>Nombres *</label>
+                    <label style={labelStyle}>{t.solicitudNueva.firstName}</label>
                     <input
                       value={formNombres}
                       onChange={(e) => setFormNombres(e.target.value)}
@@ -416,7 +422,7 @@ export default function UsuariosLista() {
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Apellidos *</label>
+                    <label style={labelStyle}>{t.solicitudNueva.lastName}</label>
                     <input
                       value={formApellidos}
                       onChange={(e) => setFormApellidos(e.target.value)}
@@ -427,7 +433,7 @@ export default function UsuariosLista() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "0.5rem" }}>
                   <div>
-                    <label style={labelStyle}>Tipo Doc *</label>
+                    <label style={labelStyle}>{t.usuarios.docType}</label>
                     <select
                       value={formTipoDoc}
                       onChange={(e) => setFormTipoDoc(e.target.value)}
@@ -439,7 +445,7 @@ export default function UsuariosLista() {
                     </select>
                   </div>
                   <div>
-                    <label style={labelStyle}>Numero Doc *</label>
+                    <label style={labelStyle}>{t.usuarios.docNumber}</label>
                     <input
                       value={formNumeroDoc}
                       onChange={(e) => setFormNumeroDoc(e.target.value)}
@@ -449,7 +455,7 @@ export default function UsuariosLista() {
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Celular 1</label>
+                  <label style={labelStyle}>{t.usuarios.phone1}</label>
                   <input
                     value={formTelefono}
                     onChange={(e) => setFormTelefono(e.target.value)}
@@ -457,7 +463,7 @@ export default function UsuariosLista() {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Roles *</label>
+                  <label style={labelStyle}>{`${t.usuarios.roles} *`}</label>
                   <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
                     {ALL_ROLES.map((role) => (
                       <label key={role} style={{ display: "flex", alignItems: "center", gap: "0.25rem", cursor: "pointer" }}>
@@ -473,9 +479,9 @@ export default function UsuariosLista() {
                 </div>
               </div>
               <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "1rem" }}>
-                <button type="button" onClick={closeModal} style={btnSmall}>Cancelar</button>
+                <button type="button" onClick={closeModal} style={btnSmall}>{t.common.cancel}</button>
                 <button type="submit" style={btnPrimary} disabled={formRoles.length === 0}>
-                  Crear
+                  {t.common.save}
                 </button>
               </div>
             </form>
@@ -488,13 +494,13 @@ export default function UsuariosLista() {
         <div style={overlayStyle} onClick={closeModal}>
           <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
             <h3 style={{ margin: "0 0 1rem 0", color: PRIMARY }}>
-              Editar: {editingUser.user_email}
+              {t.usuarios.editTitle} {editingUser.user_email}
             </h3>
             <form onSubmit={handleUpdate}>
               <div style={{ display: "grid", gap: "0.75rem" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
                   <div>
-                    <label style={labelStyle}>Nombres</label>
+                    <label style={labelStyle}>{t.solicitudNueva.firstName}</label>
                     <input
                       value={formNombres}
                       onChange={(e) => setFormNombres(e.target.value)}
@@ -503,7 +509,7 @@ export default function UsuariosLista() {
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Apellidos</label>
+                    <label style={labelStyle}>{t.solicitudNueva.lastName}</label>
                     <input
                       value={formApellidos}
                       onChange={(e) => setFormApellidos(e.target.value)}
@@ -514,7 +520,7 @@ export default function UsuariosLista() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
                   <div>
-                    <label style={labelStyle}>Celular 1</label>
+                    <label style={labelStyle}>{t.usuarios.phone1}</label>
                     <input
                       value={formTelefono}
                       onChange={(e) => setFormTelefono(e.target.value)}
@@ -522,7 +528,7 @@ export default function UsuariosLista() {
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Celular 2</label>
+                    <label style={labelStyle}>{t.usuarios.phone2}</label>
                     <input
                       value={formCelular2}
                       onChange={(e) => setFormCelular2(e.target.value)}
@@ -532,7 +538,7 @@ export default function UsuariosLista() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
                   <div>
-                    <label style={labelStyle}>Telefono Fijo</label>
+                    <label style={labelStyle}>{t.usuarios.landline}</label>
                     <input
                       value={formTelefonoFijo}
                       onChange={(e) => setFormTelefonoFijo(e.target.value)}
@@ -540,7 +546,7 @@ export default function UsuariosLista() {
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Email Personal</label>
+                    <label style={labelStyle}>{t.usuarios.personalEmail}</label>
                     <input
                       type="email"
                       value={formEmailPersona}
@@ -551,7 +557,7 @@ export default function UsuariosLista() {
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
                   <div>
-                    <label style={labelStyle}>Fecha de Nacimiento</label>
+                    <label style={labelStyle}>{t.usuarios.birthDate}</label>
                     <input
                       type="date"
                       placeholder="dd-mm-aaaa"
@@ -561,7 +567,7 @@ export default function UsuariosLista() {
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Direccion</label>
+                    <label style={labelStyle}>{t.usuarios.address}</label>
                     <input
                       value={formDireccion}
                       onChange={(e) => setFormDireccion(e.target.value)}
@@ -570,7 +576,7 @@ export default function UsuariosLista() {
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Comentario</label>
+                  <label style={labelStyle}>{t.common.comment}</label>
                   <textarea
                     value={formComentario}
                     onChange={(e) => setFormComentario(e.target.value)}
@@ -579,7 +585,7 @@ export default function UsuariosLista() {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Roles</label>
+                  <label style={labelStyle}>{t.usuarios.roles}</label>
                   <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
                     {ALL_ROLES.map((role) => (
                       <label key={role} style={{ display: "flex", alignItems: "center", gap: "0.25rem", cursor: "pointer" }}>
@@ -595,8 +601,8 @@ export default function UsuariosLista() {
                 </div>
               </div>
               <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "1rem" }}>
-                <button type="button" onClick={closeModal} style={btnSmall}>Cancelar</button>
-                <button type="submit" style={btnPrimary}>Guardar</button>
+                <button type="button" onClick={closeModal} style={btnSmall}>{t.common.cancel}</button>
+                <button type="submit" style={btnPrimary}>{t.common.save}</button>
               </div>
             </form>
           </div>
@@ -608,11 +614,11 @@ export default function UsuariosLista() {
         <div style={overlayStyle} onClick={closeModal}>
           <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
             <h3 style={{ margin: "0 0 1rem 0", color: PRIMARY }}>
-              Reset Password: {editingUser.user_email}
+              {t.usuarios.resetTitle} {editingUser.user_email}
             </h3>
             <form onSubmit={handleResetPassword}>
               <div>
-                <label style={labelStyle}>Nueva Password *</label>
+                <label style={labelStyle}>{t.usuarios.newPassword}</label>
                 <input
                   type="password"
                   value={formPassword}
@@ -621,11 +627,11 @@ export default function UsuariosLista() {
                   minLength={8}
                   style={inputStyle}
                 />
-                <span style={{ fontSize: "0.8rem", color: "#666" }}>Minimo 8 caracteres</span>
+                <span style={{ fontSize: "0.8rem", color: "#666" }}>{t.usuarios.minChars}</span>
               </div>
               <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "1rem" }}>
-                <button type="button" onClick={closeModal} style={btnSmall}>Cancelar</button>
-                <button type="submit" style={btnPrimary}>Resetear</button>
+                <button type="button" onClick={closeModal} style={btnSmall}>{t.common.cancel}</button>
+                <button type="submit" style={btnPrimary}>{t.usuarios.resetButton}</button>
               </div>
             </form>
           </div>
@@ -648,13 +654,13 @@ export default function UsuariosLista() {
               fontSize: "0.95rem",
             }}
           >
-            {permisosOpen ? "▼" : "▶"} Permisos por Rol
+            {permisosOpen ? "▼" : "▶"} {t.usuarios.rolePermissions}
           </button>
           {permisosOpen && (
             <div style={{ marginTop: "1rem" }}>
               <p style={{ fontSize: "0.85rem", color: "#666", margin: "0 0 0.75rem 0" }}>
-                Matriz de acciones permitidas por rol y estado operativo.
-                Para editar, modifique <code>backend/app/services/policy.py</code> → POLICY.
+                {t.usuarios.rolePermissionsDesc}
+                {" "}{t.usuarios.rolePermissionsEdit}
               </p>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
@@ -668,7 +674,7 @@ export default function UsuariosLista() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        Estado
+                        {t.common.status}
                       </th>
                       {Object.keys(policy).map((rol) => (
                         <th

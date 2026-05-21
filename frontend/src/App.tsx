@@ -23,6 +23,7 @@ import UsuariosLista from "./pages/app/UsuariosLista";
 import ReportesAdmin from "./pages/app/ReportesAdmin";
 import PromotoresLista from "./pages/app/PromotoresLista";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { LanguageProvider } from "./i18n/LanguageContext";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -79,10 +80,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <LanguageProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </LanguageProvider>
   );
 }

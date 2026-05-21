@@ -70,7 +70,7 @@ async def login(
     }
     if settings.is_prod:
         cookie_kwargs["secure"] = True
-        cookie_kwargs["samesite"] = "lax"
+        cookie_kwargs["samesite"] = "none"
         if settings.COOKIE_DOMAIN:
             cookie_kwargs["domain"] = settings.COOKIE_DOMAIN
     else:

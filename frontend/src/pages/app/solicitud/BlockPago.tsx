@@ -5,6 +5,7 @@ import {
   inputStyle, actionBtnStyle, disabledBtnStyle, cancelBtnStyle, helperTextStyle,
   tableStyle, thStyle, tdStyle, trStyle, emptyTextStyle,
 } from "./detailStyles";
+import { useLang } from "../../../i18n/LanguageContext";
 
 type ActionModal = string | null;
 
@@ -31,6 +32,7 @@ export default function BlockPago({
   pagoRef, onPagoRefChange, pagoComentario, onPagoComentarioChange,
   actionLoading, onExecuteAction,
 }: BlockPagoProps) {
+  const { t } = useLang();
   const state = getPagoState(detail);
   const blockedText = getPagoBlockedText(detail);
   const terminal = isTerminal(detail);
@@ -39,23 +41,23 @@ export default function BlockPago({
     <div style={blockStyle(state)}>
       <div style={blockTitleStyle}>
         <span style={statusDotStyle(state)} />
-        Pago
+        {t.pago.title}
       </div>
 
       {/* Info row */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "0.75rem" }}>
         <div>
-          <span style={labelStyle}>Estado pago: </span>
+          <span style={labelStyle}>{t.pago.paymentStatus} </span>
           <span style={valueStyle}>{detail.estado_pago}</span>
         </div>
         <div>
-          <span style={labelStyle}>Tarifa regular: </span>
+          <span style={labelStyle}>{t.pago.regularFee} </span>
           <span style={valueStyle}>
             {detail.tarifa_monto ? `${detail.tarifa_moneda} ${detail.tarifa_monto}` : "-"}
           </span>
         </div>
         <div>
-          <span style={labelStyle}>Pagos registrados: </span>
+          <span style={labelStyle}>{t.pago.registeredPayments} </span>
           <span style={valueStyle}>{detail.pagos.length}</span>
         </div>
       </div>
@@ -66,12 +68,12 @@ export default function BlockPago({
           <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={thStyle}>Canal</th>
-                <th style={thStyle}>Fecha</th>
-                <th style={thStyle}>Monto</th>
-                <th style={thStyle}>Referencia</th>
-                <th style={thStyle}>Comentario</th>
-                <th style={thStyle}>Validado</th>
+                <th style={thStyle}>{t.pago.channel}</th>
+                <th style={thStyle}>{t.pago.date}</th>
+                <th style={thStyle}>{t.pago.amount}</th>
+                <th style={thStyle}>{t.pago.reference}</th>
+                <th style={thStyle}>{t.common.comment}</th>
+                <th style={thStyle}>{t.pago.validated}</th>
               </tr>
             </thead>
             <tbody>
@@ -82,27 +84,27 @@ export default function BlockPago({
                   <td style={tdStyle}>{p.moneda} {p.monto}</td>
                   <td style={tdStyle}>{p.referencia_transaccion ?? "-"}</td>
                   <td style={tdStyle}>{p.comentario ?? "-"}</td>
-                  <td style={tdStyle}>{p.validated_at ? new Date(p.validated_at).toLocaleString() : "Pendiente"}</td>
+                  <td style={tdStyle}>{p.validated_at ? new Date(p.validated_at).toLocaleString() : t.pago.pending}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       ) : (
-        <p style={emptyTextStyle}>No hay pagos registrados.</p>
+        <p style={emptyTextStyle}>{t.pago.noPayments}</p>
       )}
 
       {/* Action: Registrar pago */}
       {can("REGISTRAR_PAGO") ? (
         <button onClick={() => onOpenModal("registrar_pago")} style={actionBtnStyle("#198754")}>
-          Registrar pago
+          {t.pago.registerPayment}
         </button>
       ) : (
         <div>
-          <button disabled style={disabledBtnStyle()}>Registrar pago</button>
+          <button disabled style={disabledBtnStyle()}>{t.pago.registerPayment}</button>
           <div style={helperTextStyle}>
             {blockedText
-              ?? (detail.estado_pago === "PAGADO" ? "Pago ya registrado." : terminal ? "Solicitud finalizada." : "No disponible en este momento.")}
+              ?? (detail.estado_pago === "PAGADO" ? t.pago.alreadyPaid : terminal ? t.gestion.requestCompleted : t.gestion.notAvailable)}
           </div>
         </div>
       )}
@@ -113,10 +115,10 @@ export default function BlockPago({
           marginTop: "0.75rem", padding: "0.75rem",
           background: "rgba(255,255,255,0.7)", borderRadius: 6, border: "1px solid #a3cfbb",
         }}>
-          <h4 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem" }}>Registrar pago</h4>
+          <h4 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem" }}>{t.pago.registerPayment}</h4>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div>
-              <label style={labelStyle}>Canal de pago *</label>
+              <label style={labelStyle}>{t.pago.paymentChannel}</label>
               <select value={pagoCanal} onChange={(e) => onPagoCanalChange(e.target.value)} style={inputStyle}>
                 <option value="YAPE">YAPE</option>
                 <option value="PLIN">PLIN</option>
@@ -125,16 +127,16 @@ export default function BlockPago({
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Fecha de pago *</label>
+              <label style={labelStyle}>{t.pago.paymentDate}</label>
               <input type="date" placeholder="dd-mm-aaaa" value={pagoFecha} onChange={(e) => onPagoFechaChange(e.target.value)} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Monto *</label>
+              <label style={labelStyle}>{t.pago.paymentAmount}</label>
               <input type="number" step="0.01" value={pagoMonto} onChange={(e) => onPagoMontoChange(e.target.value)}
                 placeholder="200.00" style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Moneda</label>
+              <label style={labelStyle}>{t.pago.currency}</label>
               <select value={pagoMoneda} onChange={(e) => onPagoMonedaChange(e.target.value)} style={inputStyle}>
                 <option value="PEN">PEN</option>
                 <option value="USD">USD</option>
@@ -142,14 +144,14 @@ export default function BlockPago({
             </div>
           </div>
           <div style={{ marginTop: "0.75rem" }}>
-            <label style={labelStyle}>Referencia de transaccion</label>
+            <label style={labelStyle}>{t.pago.transactionRef}</label>
             <input value={pagoRef} onChange={(e) => onPagoRefChange(e.target.value)}
-              placeholder="Numero de operacion, voucher..." style={{ ...inputStyle, maxWidth: 400 }} />
+              placeholder={t.pago.refPlaceholder} style={{ ...inputStyle, maxWidth: 400 }} />
           </div>
           <div style={{ marginTop: "0.75rem" }}>
-            <label style={labelStyle}>Comentario</label>
+            <label style={labelStyle}>{t.common.comment}</label>
             <input value={pagoComentario} onChange={(e) => onPagoComentarioChange(e.target.value)}
-              placeholder="Ej: descuento aplicado, pago parcial..." style={{ ...inputStyle, maxWidth: 400 }} />
+              placeholder={t.pago.commentPlaceholder} style={{ ...inputStyle, maxWidth: 400 }} />
           </div>
           <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
             <button disabled={actionLoading || !pagoMonto || !pagoFecha}
@@ -162,9 +164,9 @@ export default function BlockPago({
                 comentario: pagoComentario || undefined,
               })}
               style={actionBtnStyle(actionLoading ? "#6c757d" : "#198754")}>
-              {actionLoading ? "Procesando..." : "Registrar pago"}
+              {actionLoading ? t.common.processing : t.pago.registerPayment}
             </button>
-            <button onClick={onCloseModal} style={cancelBtnStyle}>Cancelar</button>
+            <button onClick={onCloseModal} style={cancelBtnStyle}>{t.common.cancel}</button>
           </div>
         </div>
       )}

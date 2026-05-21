@@ -5,6 +5,7 @@ import {
   blockStyle, blockTitleStyle, statusDotStyle, labelStyle, valueStyle,
   inputStyle, actionBtnStyle, disabledBtnStyle, cancelBtnStyle, helperTextStyle,
 } from "./detailStyles";
+import { useLang } from "../../../i18n/LanguageContext";
 
 type ActionModal = string | null;
 
@@ -27,6 +28,7 @@ export default function BlockGestion({
   actionLoading, onOpenModal, onCloseModal, onExecuteAction,
   onSaveTipoLugar,
 }: BlockGestionProps) {
+  const { t } = useLang();
   const state = getGestionState(detail);
   const terminal = isTerminal(detail);
 
@@ -55,27 +57,27 @@ export default function BlockGestion({
     <div style={blockStyle(state)}>
       <div style={blockTitleStyle}>
         <span style={statusDotStyle(state)} />
-        Gestion administrativa
+        {t.gestion.title}
       </div>
 
       {/* Info row */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginBottom: "0.75rem" }}>
         <div>
-          <span style={labelStyle}>Gestor asignado: </span>
+          <span style={labelStyle}>{t.gestion.managerAssigned} </span>
           <span style={valueStyle}>
-            {detail.asignaciones_vigentes.GESTOR?.nombre ?? "Sin asignar"}
+            {detail.asignaciones_vigentes.GESTOR?.nombre ?? t.gestion.notAssigned}
           </span>
         </div>
         <div>
-          <span style={labelStyle}>Estado atencion: </span>
+          <span style={labelStyle}>{t.gestion.careStatus} </span>
           <span style={valueStyle}>{detail.estado_atencion}</span>
         </div>
         <div>
-          <span style={labelStyle}>Tipo atencion: </span>
+          <span style={labelStyle}>{t.gestion.careType} </span>
           <span style={valueStyle}>{detail.tipo_atencion ?? "-"}</span>
         </div>
         <div>
-          <span style={labelStyle}>Lugar atencion: </span>
+          <span style={labelStyle}>{t.gestion.careLocation} </span>
           <span style={valueStyle}>{detail.lugar_atencion ?? "-"}</span>
         </div>
       </div>
@@ -84,7 +86,7 @@ export default function BlockGestion({
       {!editingTipoLugar && can("EDITAR_DATOS") && !terminal && (
         <div style={{ marginBottom: "0.75rem" }}>
           <button onClick={startEditTipoLugar} style={actionBtnStyle("#6c757d")}>
-            Editar tipo/lugar atencion
+            {t.gestion.editCareType}
           </button>
         </div>
       )}
@@ -95,25 +97,25 @@ export default function BlockGestion({
         }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div>
-              <label style={labelStyle}>Tipo atencion</label>
+              <label style={labelStyle}>{t.gestion.careTypeLabel}</label>
               <select value={tipoAtencion} onChange={(e) => setTipoAtencion(e.target.value)} style={inputStyle}>
-                <option value="">Sin definir</option>
-                <option value="VIRTUAL">VIRTUAL</option>
-                <option value="PRESENCIAL">PRESENCIAL</option>
+                <option value="">{t.gestion.undefined}</option>
+                <option value="VIRTUAL">{t.gestion.virtual}</option>
+                <option value="PRESENCIAL">{t.gestion.inPerson}</option>
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Lugar atencion</label>
+              <label style={labelStyle}>{t.gestion.careLocationLabel}</label>
               <input value={lugarAtencion} onChange={(e) => setLugarAtencion(e.target.value)}
-                placeholder="Ej: Consultorio Lima Norte" style={inputStyle} />
+                placeholder={t.gestion.locationPlaceholder} style={inputStyle} />
             </div>
           </div>
           <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
             <button disabled={savingTipoLugar} onClick={handleSaveTipoLugar}
               style={actionBtnStyle(savingTipoLugar ? "#6c757d" : "#198754")}>
-              {savingTipoLugar ? "Guardando..." : "Guardar"}
+              {savingTipoLugar ? t.common.saving : t.common.save}
             </button>
-            <button onClick={() => setEditingTipoLugar(false)} style={cancelBtnStyle}>Cancelar</button>
+            <button onClick={() => setEditingTipoLugar(false)} style={cancelBtnStyle}>{t.common.cancel}</button>
           </div>
         </div>
       )}
@@ -126,15 +128,15 @@ export default function BlockGestion({
             onClick={() => onOpenModal(can("CAMBIAR_GESTOR") ? "cambiar_gestor" : "asignar_gestor")}
             style={actionBtnStyle("#0d6efd")}
           >
-            {detail.asignaciones_vigentes.GESTOR ? "Cambiar gestor" : "Asignar gestor"}
+            {detail.asignaciones_vigentes.GESTOR ? t.gestion.changeManager : t.gestion.assignManager}
           </button>
         ) : (
           <div>
             <button disabled style={disabledBtnStyle()}>
-              {detail.asignaciones_vigentes.GESTOR ? "Cambiar gestor" : "Asignar gestor"}
+              {detail.asignaciones_vigentes.GESTOR ? t.gestion.changeManager : t.gestion.assignManager}
             </button>
             <div style={helperTextStyle}>
-              {terminal ? "Solicitud finalizada." : "No disponible en este momento."}
+              {terminal ? t.gestion.requestCompleted : t.gestion.notAvailable}
             </div>
           </div>
         )}
@@ -148,13 +150,13 @@ export default function BlockGestion({
           background: "rgba(255,255,255,0.7)", borderRadius: 6, border: "1px solid #9ec5fe",
         }}>
           <h4 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem" }}>
-            {activeModal === "asignar_gestor" ? "Asignar gestor" : "Cambiar gestor"}
+            {activeModal === "asignar_gestor" ? t.gestion.assignManager : t.gestion.changeManager}
           </h4>
           <div style={{ marginBottom: "0.5rem" }}>
-            <label style={labelStyle}>Gestor *</label>
+            <label style={labelStyle}>{t.gestion.managerLabel}</label>
             <select value={personaId} onChange={(e) => onPersonaIdChange(e.target.value)}
               style={{ ...inputStyle, maxWidth: 350 }}>
-              <option value="">-- Seleccionar gestor --</option>
+              <option value="">{t.gestion.selectManager}</option>
               {gestores.map((g) => (
                 <option key={g.persona_id} value={g.persona_id}>{g.nombre}</option>
               ))}
@@ -167,9 +169,9 @@ export default function BlockGestion({
                 { persona_id_gestor: parseInt(personaId) }
               )}
               style={actionBtnStyle(actionLoading ? "#6c757d" : "#0d6efd")}>
-              {actionLoading ? "Procesando..." : "Confirmar"}
+              {actionLoading ? t.common.processing : t.common.confirm}
             </button>
-            <button onClick={onCloseModal} style={cancelBtnStyle}>Cancelar</button>
+            <button onClick={onCloseModal} style={cancelBtnStyle}>{t.common.cancel}</button>
           </div>
         </div>
       )}

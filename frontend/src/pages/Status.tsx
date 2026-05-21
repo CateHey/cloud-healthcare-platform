@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLang } from "../i18n/LanguageContext";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
@@ -16,6 +17,7 @@ export default function Status() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [version, setVersion] = useState<VersionResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLang();
 
   useEffect(() => {
     const check = async () => {
@@ -28,7 +30,7 @@ export default function Status() {
         setVersion(await vRes.json());
         setError(null);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Error de conexion");
+        setError(e instanceof Error ? e.message : t.status.connectionError);
         setHealth(null);
         setVersion(null);
       }
@@ -39,7 +41,7 @@ export default function Status() {
   return (
     <div style={{ fontFamily: "system-ui", padding: "2rem", maxWidth: 480, margin: "0 auto" }}>
       <h1>MediCert</h1>
-      <h2>Estado del Sistema</h2>
+      <h2>{t.status.title}</h2>
 
       <div
         style={{
@@ -52,15 +54,15 @@ export default function Status() {
         }}
       >
         {health?.ok
-          ? `Conectado — Backend ${health.status}`
+          ? `${t.status.connected} ${health.status}`
           : error
-            ? `Desconectado — ${error}`
-            : "Verificando conexion..."}
+            ? `${t.status.disconnected} ${error}`
+            : t.status.checking}
       </div>
 
       {version && (
         <p style={{ color: "#666" }}>
-          Version: <strong>{version.version}</strong>
+          {t.status.version} <strong>{version.version}</strong>
         </p>
       )}
     </div>

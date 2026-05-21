@@ -1,14 +1,8 @@
-/**
- * Pagina de Inicio — Dashboard ligero.
- * Muestra bienvenida personalizada, accesos rapidos por rol,
- * y las ultimas solicitudes relevantes al usuario.
- * Ref: docs/claude/M5.6_dashboard_inicio.md
- */
-
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { api } from "../../services/api";
+import { useLang } from "../../i18n/LanguageContext";
 import type { SolicitudListItemDTO, EstadoOperativo } from "../../types/solicitud";
 
 const PRIMARY = "#1a3d5c";
@@ -22,47 +16,33 @@ const estadoColor: Record<EstadoOperativo, string> = {
   CANCELADO: "#6c757d",
 };
 
-/* ── Role descriptions (plain language) ── */
-
-const ROLE_DESCRIPTIONS: Record<string, string> = {
-  OPERADOR:
-    "Como operador, puedes registrar nuevas solicitudes de certificado medico, asignar gestores para dar seguimiento a cada solicitud y registrar pagos.",
-  GESTOR:
-    "Como gestor, puedes dar seguimiento a las solicitudes que te fueron asignadas, registrar pagos de los clientes y coordinar la asignacion de medicos evaluadores.",
-  MEDICO:
-    "Como medico evaluador, puedes atender las solicitudes de evaluacion medica asignadas y completar las evaluaciones realizadas.",
-  ADMIN:
-    "Como administrador, tienes acceso completo: gestionar todas las solicitudes del sistema, administrar usuarios y supervisar el flujo de trabajo.",
-};
-
-/* ── Quick action definitions per role ── */
-
 interface QuickAction {
-  label: string;
+  labelKey: "register" | "viewRequests" | "manageUsers";
   path: string;
 }
 
 const ROLE_ACTIONS: Record<string, QuickAction[]> = {
   OPERADOR: [
-    { label: "Registrar solicitud", path: "/app/solicitudes/nueva" },
-    { label: "Ver solicitudes", path: "/app/solicitudes" },
+    { labelKey: "register", path: "/app/solicitudes/nueva" },
+    { labelKey: "viewRequests", path: "/app/solicitudes" },
   ],
   GESTOR: [
-    { label: "Ver solicitudes", path: "/app/solicitudes" },
+    { labelKey: "viewRequests", path: "/app/solicitudes" },
   ],
   MEDICO: [
-    { label: "Ver solicitudes", path: "/app/solicitudes" },
+    { labelKey: "viewRequests", path: "/app/solicitudes" },
   ],
   ADMIN: [
-    { label: "Ver solicitudes", path: "/app/solicitudes" },
-    { label: "Registrar solicitud", path: "/app/solicitudes/nueva" },
-    { label: "Administrar usuarios", path: "/app/usuarios" },
+    { labelKey: "viewRequests", path: "/app/solicitudes" },
+    { labelKey: "register", path: "/app/solicitudes/nueva" },
+    { labelKey: "manageUsers", path: "/app/usuarios" },
   ],
 };
 
 export default function Inicio() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLang();
   const [solicitudes, setSolicitudes] = useState<SolicitudListItemDTO[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -75,7 +55,7 @@ export default function Inicio() {
       }>("/solicitudes?mine=true&page_size=10");
       setSolicitudes(res.data.items);
     } catch {
-      /* ignore — table will be empty */
+      /* ignore */
     } finally {
       setLoading(false);
     }
@@ -87,7 +67,6 @@ export default function Inicio() {
 
   if (!user) return null;
 
-  /* Deduplicate quick actions across roles */
   const seenPaths = new Set<string>();
   const quickActions: QuickAction[] = [];
   for (const role of user.roles) {
@@ -99,15 +78,14 @@ export default function Inicio() {
     }
   }
 
-  /* Role descriptions for this user */
   const descriptions = user.roles
-    .map((r) => ROLE_DESCRIPTIONS[r])
+    .map((r) => (t.inicio.roleDescriptions as Record<string, string>)[r])
     .filter(Boolean);
+
+  const tableHeaders = [t.common.code, t.common.client, t.common.status, t.common.date];
 
   return (
     <div style={{ maxWidth: 960, margin: "0 auto" }}>
-
-      {/* ── Welcome ── */}
       <div
         style={{
           background: `linear-gradient(135deg, ${PRIMARY}, #2a5f8f)`,
@@ -118,14 +96,13 @@ export default function Inicio() {
         }}
       >
         <h2 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem" }}>
-          Bienvenido, {user.display_name}
+          {t.inicio.welcome} {user.display_name}
         </h2>
         <p style={{ margin: 0, opacity: 0.9, fontSize: "0.95rem", lineHeight: 1.5 }}>
-          MediCert — Sistema de Gestion de Certificados Medicos.
+          {t.inicio.subtitle}
         </p>
       </div>
 
-      {/* ── Role info ── */}
       {descriptions.length > 0 && (
         <div
           style={{
@@ -147,7 +124,6 @@ export default function Inicio() {
         </div>
       )}
 
-      {/* ── Quick actions ── */}
       <div
         style={{
           display: "grid",
@@ -181,21 +157,20 @@ export default function Inicio() {
               e.currentTarget.style.color = PRIMARY;
             }}
           >
-            {action.label}
+            {t.inicio.roleActions[action.labelKey]}
           </button>
         ))}
       </div>
 
-      {/* ── Recent solicitudes ── */}
       <h3 style={{ color: PRIMARY, margin: "0 0 0.75rem 0", fontSize: "1.1rem" }}>
-        Tus solicitudes recientes
+        {t.inicio.recentRequests}
       </h3>
 
       {loading ? (
-        <p style={{ color: "#666" }}>Cargando...</p>
+        <p style={{ color: "#666" }}>{t.common.loading}</p>
       ) : solicitudes.length === 0 ? (
         <p style={{ color: "#666", fontStyle: "italic" }}>
-          No tienes solicitudes activas por el momento.
+          {t.inicio.noRequests}
         </p>
       ) : (
         <>
@@ -209,7 +184,7 @@ export default function Inicio() {
             >
               <thead>
                 <tr>
-                  {["Codigo", "Cliente", "Estado", "Fecha"].map((h) => (
+                  {tableHeaders.map((h) => (
                     <th
                       key={h}
                       style={{
@@ -275,7 +250,7 @@ export default function Inicio() {
                 textDecoration: "underline",
               }}
             >
-              Ver todas las solicitudes
+              {t.inicio.viewAll}
             </button>
           </div>
         </>

@@ -9,6 +9,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../../services/api";
+import { useLang } from "../../i18n/LanguageContext";
 import type { SolicitudListResponse, EstadoOperativo } from "../../types/solicitud";
 
 const ESTADOS: EstadoOperativo[] = [
@@ -36,6 +37,7 @@ const PAGE_SIZE = 20;
 export default function SolicitudesLista() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t } = useLang();
 
   const qParam = searchParams.get("q") ?? "";
   const estadoParam = searchParams.get("estado_operativo") ?? "";
@@ -60,11 +62,11 @@ export default function SolicitudesLista() {
       setData(res);
     } catch (err: unknown) {
       const e = err as { detail?: string };
-      setError(e.detail ?? "Error al cargar solicitudes");
+      setError(e.detail ?? t.solicitudes.errorLoading);
     } finally {
       setLoading(false);
     }
-  }, [qParam, estadoParam, pageParam]);
+  }, [qParam, estadoParam, pageParam, t]);
 
   useEffect(() => {
     fetchList();
@@ -105,7 +107,7 @@ export default function SolicitudesLista() {
     <div>
       {/* Title + Action */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-        <h2 style={{ margin: 0, color: PRIMARY }}>Solicitudes</h2>
+        <h2 style={{ margin: 0, color: PRIMARY }}>{t.solicitudes.title}</h2>
         <button
           onClick={() => navigate("/app/solicitudes/nueva")}
           style={{
@@ -118,7 +120,7 @@ export default function SolicitudesLista() {
             fontWeight: 600,
           }}
         >
-          + Registrar Solicitud
+          {t.solicitudes.newRequest}
         </button>
       </div>
 
@@ -129,11 +131,11 @@ export default function SolicitudesLista() {
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Buscar por documento o nombre..."
+            placeholder={t.solicitudes.searchPlaceholder}
             style={{ padding: "0.4rem 0.75rem", border: "1px solid #ccc", borderRadius: 4, width: 260 }}
           />
           <button type="submit" style={{ padding: "0.4rem 0.75rem", cursor: "pointer", borderRadius: 4, border: "1px solid #ccc" }}>
-            Buscar
+            {t.common.search}
           </button>
         </form>
 
@@ -142,7 +144,7 @@ export default function SolicitudesLista() {
           onChange={(e) => handleEstadoFilter(e.target.value)}
           style={{ padding: "0.4rem 0.75rem", border: "1px solid #ccc", borderRadius: 4 }}
         >
-          <option value="">Todos los estados</option>
+          <option value="">{t.solicitudes.allStatuses}</option>
           {ESTADOS.map((e) => (
             <option key={e} value={e}>{e.replace(/_/g, " ")}</option>
           ))}
@@ -158,21 +160,21 @@ export default function SolicitudesLista() {
 
       {/* Table */}
       {loading ? (
-        <p style={{ color: "#666" }}>Cargando...</p>
+        <p style={{ color: "#666" }}>{t.common.loading}</p>
       ) : data && data.data.items.length === 0 ? (
-        <p style={{ color: "#666" }}>No se encontraron solicitudes.</p>
+        <p style={{ color: "#666" }}>{t.solicitudes.noResults}</p>
       ) : data ? (
         <>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #dee2e6", textAlign: "left" }}>
-                <th style={{ padding: "0.5rem" }}>Codigo</th>
-                <th style={{ padding: "0.5rem" }}>Cliente</th>
-                <th style={{ padding: "0.5rem" }}>Documento</th>
-                <th style={{ padding: "0.5rem" }}>Estado</th>
-                <th style={{ padding: "0.5rem" }}>Gestor</th>
-                <th style={{ padding: "0.5rem" }}>Medico</th>
-                <th style={{ padding: "0.5rem" }}>Fecha</th>
+                <th style={{ padding: "0.5rem" }}>{t.common.code}</th>
+                <th style={{ padding: "0.5rem" }}>{t.common.client}</th>
+                <th style={{ padding: "0.5rem" }}>{t.common.document}</th>
+                <th style={{ padding: "0.5rem" }}>{t.common.status}</th>
+                <th style={{ padding: "0.5rem" }}>{t.solicitudes.manager}</th>
+                <th style={{ padding: "0.5rem" }}>{t.solicitudes.doctor}</th>
+                <th style={{ padding: "0.5rem" }}>{t.common.date}</th>
               </tr>
             </thead>
             <tbody>
@@ -220,17 +222,20 @@ export default function SolicitudesLista() {
                 onClick={() => handlePage(pageParam - 1)}
                 style={{ padding: "0.3rem 0.6rem", cursor: pageParam <= 1 ? "default" : "pointer", borderRadius: 4, border: "1px solid #ccc" }}
               >
-                Anterior
+                {t.common.previous}
               </button>
               <span style={{ padding: "0.3rem 0.6rem", color: "#666" }}>
-                Pagina {pageParam} de {totalPages} ({data.meta.total} resultados)
+                {t.solicitudes.pageInfo
+                  .replace("{page}", String(pageParam))
+                  .replace("{total}", String(totalPages))
+                  .replace("{count}", String(data.meta.total))}
               </span>
               <button
                 disabled={pageParam >= totalPages}
                 onClick={() => handlePage(pageParam + 1)}
                 style={{ padding: "0.3rem 0.6rem", cursor: pageParam >= totalPages ? "default" : "pointer", borderRadius: 4, border: "1px solid #ccc" }}
               >
-                Siguiente
+                {t.common.next}
               </button>
             </div>
           )}

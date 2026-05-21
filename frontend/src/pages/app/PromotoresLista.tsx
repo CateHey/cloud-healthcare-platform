@@ -7,6 +7,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api } from "../../services/api";
 import Modal from "../../components/Modal";
+import { useLang } from "../../i18n/LanguageContext";
 
 const PRIMARY = "#1a3d5c";
 
@@ -96,6 +97,7 @@ const emptyForm: FormData = {
 };
 
 export default function PromotoresLista() {
+  const { t } = useLang();
   const [items, setItems] = useState<PromotorItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -151,11 +153,11 @@ export default function PromotoresLista() {
       setItems(res.data);
     } catch (err: unknown) {
       const e = err as { detail?: string };
-      setError(e.detail ?? "Error al cargar promotores");
+      setError(e.detail ?? t.promotores.errorLoading);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchList();
@@ -254,21 +256,21 @@ export default function PromotoresLista() {
       fetchList();
     } catch (err: unknown) {
       const e = err as { detail?: string };
-      setError(e.detail ?? "Error al guardar promotor");
+      setError(e.detail ?? t.promotores.saveError);
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Eliminar este promotor?")) return;
+    if (!confirm(t.promotores.deleteConfirm)) return;
     setError(null);
     try {
       await api.delete(`/promotores/${id}`);
       fetchList();
     } catch (err: unknown) {
       const e = err as { detail?: string };
-      setError(e.detail ?? "Error al eliminar promotor");
+      setError(e.detail ?? t.promotores.deleteError);
     }
   };
 
@@ -279,10 +281,10 @@ export default function PromotoresLista() {
   return (
     <div style={{ maxWidth: "100%" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-        <h2 style={{ margin: 0, color: PRIMARY }}>Promotores</h2>
+        <h2 style={{ margin: 0, color: PRIMARY }}>{t.promotores.title}</h2>
         {formMode === "idle" && (
           <button onClick={startCreate} style={btnStyle("#198754")}>
-            + Nuevo promotor
+            {t.promotores.newPromoter}
           </button>
         )}
       </div>
@@ -306,19 +308,19 @@ export default function PromotoresLista() {
       <Modal open={activeModal === "create" || activeModal === "edit"} onClose={closeModal}>
         <div style={modalPanelStyle}>
           <h3 style={{ margin: "0 0 0.75rem", color: PRIMARY, fontSize: "1rem" }}>
-            {formMode === "creating" ? "Nuevo promotor" : "Editar promotor"}
+            {formMode === "creating" ? t.promotores.newPromoterTitle : t.promotores.editPromoterTitle}
           </h3>
 
           {/* Tipo promotor */}
           {(formMode === "creating" || formMode === "editing") && (
             <div style={{ marginBottom: "0.75rem" }}>
               <label style={{ fontSize: "0.82rem", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>
-                Tipo
+                {t.common.type}
               </label>
               <select value={form.tipo_promotor} onChange={(e) => updateField("tipo_promotor", e.target.value)} style={{ ...inputStyle, width: "auto" }}>
-                <option value="PERSONA">Persona</option>
-                <option value="EMPRESA">Empresa</option>
-                <option value="OTROS">Otros</option>
+                <option value="PERSONA">{t.promotores.person}</option>
+                <option value="EMPRESA">{t.promotores.company}</option>
+                <option value="OTROS">{t.promotores.other}</option>
               </select>
             </div>
           )}
@@ -327,18 +329,18 @@ export default function PromotoresLista() {
           {form.tipo_promotor === "PERSONA" && (
             <div style={grid2}>
               <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Nombres *</label>
-                <input value={form.nombres} onChange={(e) => updateField("nombres", e.target.value)} style={inputStyle} placeholder="Nombres" />
+                <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.promotores.firstName}</label>
+                <input value={form.nombres} onChange={(e) => updateField("nombres", e.target.value)} style={inputStyle} placeholder={t.promotores.firstName} />
               </div>
               <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Apellidos *</label>
-                <input value={form.apellidos} onChange={(e) => updateField("apellidos", e.target.value)} style={inputStyle} placeholder="Apellidos" />
+                <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.promotores.lastName}</label>
+                <input value={form.apellidos} onChange={(e) => updateField("apellidos", e.target.value)} style={inputStyle} placeholder={t.promotores.lastName} />
               </div>
 
               <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Tipo documento</label>
+                <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.promotores.docType}</label>
                 <select value={form.tipo_documento} onChange={(e) => updateField("tipo_documento", e.target.value)} style={inputStyle}>
-                  <option value="">-- Opcional --</option>
+                  <option value="">{t.promotores.optionalDefault}</option>
                   <option value="DNI">DNI</option>
                   <option value="CE">CE</option>
                   <option value="PASAPORTE">Pasaporte</option>
@@ -346,27 +348,27 @@ export default function PromotoresLista() {
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Nro documento</label>
-                <input value={form.numero_documento} onChange={(e) => updateField("numero_documento", e.target.value)} style={inputStyle} placeholder="Numero" />
+                <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.promotores.docNumber}</label>
+                <input value={form.numero_documento} onChange={(e) => updateField("numero_documento", e.target.value)} style={inputStyle} placeholder={t.promotores.docNumberPlaceholder} />
               </div>
             </div>
           )}
 
           {form.tipo_promotor === "EMPRESA" && (
             <div style={{ marginBottom: "0.5rem" }}>
-              <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Razon social *</label>
-              <input value={form.razon_social} onChange={(e) => updateField("razon_social", e.target.value)} style={inputStyle} placeholder="Razon social" />
+              <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.promotores.companyName}</label>
+              <input value={form.razon_social} onChange={(e) => updateField("razon_social", e.target.value)} style={inputStyle} placeholder={t.promotores.companyName} />
             </div>
           )}
 
           {form.tipo_promotor === "OTROS" && (
             <div style={{ marginBottom: "0.5rem" }}>
-              <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Nombre *</label>
+              <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.promotores.otherName}</label>
               <input
                 value={form.nombre_promotor_otros}
                 onChange={(e) => updateField("nombre_promotor_otros", e.target.value)}
                 style={inputStyle}
-                placeholder="Nombre del promotor"
+                placeholder={t.promotores.otherName}
               />
             </div>
           )}
@@ -378,39 +380,39 @@ export default function PromotoresLista() {
               <input value={form.ruc} onChange={(e) => updateField("ruc", e.target.value)} style={inputStyle} placeholder="RUC" />
             </div>
             <div>
-              <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Email</label>
+              <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.common.email}</label>
               <input value={form.email} onChange={(e) => updateField("email", e.target.value)} style={inputStyle} placeholder="correo@ejemplo.com" />
             </div>
             <div>
-              <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Celular</label>
-              <input value={form.celular_1} onChange={(e) => updateField("celular_1", e.target.value)} style={inputStyle} placeholder="Celular" />
+              <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.common.phone}</label>
+              <input value={form.celular_1} onChange={(e) => updateField("celular_1", e.target.value)} style={inputStyle} placeholder={t.common.phone} />
             </div>
           </div>
 
           <div style={{ ...grid2, marginBottom: "0.75rem" }}>
             <div>
-              <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Fuente</label>
+              <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.promotores.source}</label>
               <select value={form.fuente_promotor} onChange={(e) => updateField("fuente_promotor", e.target.value)} style={inputStyle}>
-                <option value="">Seleccione fuente</option>
-                <option value="notarias">Notarias</option>
-                <option value="abogados">Abogados</option>
-                <option value="clientes referentes">Clientes referentes</option>
-                <option value="redes sociales">Redes sociales</option>
-                <option value="etc">Otro</option>
+                <option value="">{t.promotores.selectSource}</option>
+                <option value="notarias">{t.promotores.sourceNotaries}</option>
+                <option value="abogados">{t.promotores.sourceLawyers}</option>
+                <option value="clientes referentes">{t.promotores.sourceReferrals}</option>
+                <option value="redes sociales">{t.promotores.sourceSocial}</option>
+                <option value="etc">{t.promotores.sourceOther}</option>
               </select>
             </div>
             <div>
-              <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Comentario</label>
-              <input value={form.comentario} onChange={(e) => updateField("comentario", e.target.value)} style={inputStyle} placeholder="Comentario" />
+              <label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.common.comment}</label>
+              <input value={form.comentario} onChange={(e) => updateField("comentario", e.target.value)} style={inputStyle} placeholder={t.common.comment} />
             </div>
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
             <button onClick={handleSave} disabled={saving} style={btnStyle(saving ? "#6c757d" : "#198754")}>
-              {saving ? "Guardando..." : "Guardar"}
+              {saving ? t.common.saving : t.common.save}
             </button>
             <button onClick={closeModal} style={btnStyle("#6c757d")}>
-              Cancelar
+              {t.common.cancel}
             </button>
           </div>
         </div>
@@ -418,20 +420,20 @@ export default function PromotoresLista() {
 
       {/* ─── Tabla ─── */}
       {loading ? (
-        <p style={{ color: "#666" }}>Cargando...</p>
+        <p style={{ color: "#666" }}>{t.common.loading}</p>
       ) : items.length === 0 ? (
-        <p style={{ color: "#999" }}>No hay promotores registrados.</p>
+        <p style={{ color: "#999" }}>{t.promotores.noPromoters}</p>
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              <th style={thStyle}>Tipo</th>
-              <th style={thStyle}>Nombre</th>
+              <th style={thStyle}>{t.common.type}</th>
+              <th style={thStyle}>{t.common.name}</th>
               <th style={thStyle}>RUC</th>
-              <th style={thStyle}>Email</th>
-              <th style={thStyle}>Celular</th>
-              <th style={thStyle}>Fuente</th>
-              <th style={thStyle}>Acciones</th>
+              <th style={thStyle}>{t.common.email}</th>
+              <th style={thStyle}>{t.common.phone}</th>
+              <th style={thStyle}>{t.promotores.source}</th>
+              <th style={thStyle}>{t.common.actions}</th>
             </tr>
           </thead>
           <tbody>
@@ -458,10 +460,10 @@ export default function PromotoresLista() {
                 <td style={tdStyle}>{p.fuente_promotor ?? "-"}</td>
                 <td style={tdStyle}>
                   <button onClick={() => startEdit(p)} style={{ ...btnStyle("#0d6efd"), marginRight: "0.25rem", padding: "0.2rem 0.5rem" }}>
-                    Editar
+                    {t.common.edit}
                   </button>
                   <button onClick={() => handleDelete(p.promotor_id)} style={{ ...btnStyle("#dc3545"), padding: "0.2rem 0.5rem" }}>
-                    Eliminar
+                    {t.common.delete}
                   </button>
                 </td>
               </tr>

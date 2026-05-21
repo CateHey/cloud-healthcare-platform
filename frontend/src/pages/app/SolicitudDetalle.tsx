@@ -14,6 +14,7 @@ import { api } from "../../services/api";
 import type { ApiResponse } from "../../types/auth";
 import type { SolicitudDetailDTO, EditSolicitudRequest, EstadoOperativo } from "../../types/solicitud";
 import { useAuth } from "../../hooks/useAuth";
+import { useLang } from "../../i18n/LanguageContext";
 import WorkflowStepper from "../../components/WorkflowStepper";
 import BlockGestion from "./solicitud/BlockGestion";
 import BlockPago from "./solicitud/BlockPago";
@@ -36,6 +37,7 @@ export default function SolicitudDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLang();
   const isAdmin = user?.roles.includes("ADMIN") ?? false;
 
   const [detail, setDetail] = useState<SolicitudDetailDTO | null>(null);
@@ -82,14 +84,14 @@ export default function SolicitudDetalle() {
     } catch (err: unknown) {
       const e = err as { status?: number; detail?: string };
       if (e.status === 404) {
-        setError("Solicitud no encontrada.");
+        setError(t.solicitudDetalle.notFound);
       } else {
-        setError(e.detail ?? "Error al cargar solicitud");
+        setError(e.detail ?? t.solicitudDetalle.errorLoading);
       }
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     fetchDetail();
@@ -211,18 +213,18 @@ export default function SolicitudDetalle() {
   const e = err as { status?: number; detail?: string; code?: string };
 
   if (e.status === 403) {
-    setError("No autorizado para esta accion.");
+    setError(t.solicitudDetalle.unauthorized);
   } else if (e.status === 409) {
-    setError("La solicitud cambio. Recargando...");
+    setError(t.solicitudDetalle.requestChanged);
     fetchDetail();
   } else if (e.status === 422) {
-    setError(e.detail ?? "Datos invalidos.");
+    setError(e.detail ?? t.solicitudDetalle.invalidData);
   } else if (e.status === 504) {
-    setError(e.detail ?? "La subida expiró (timeout). Intenta de nuevo.");
+    setError(e.detail ?? t.solicitudDetalle.uploadTimeout);
   } else if (e.status === 502) {
-    setError(e.detail ?? "Problema con almacenamiento. Intenta de nuevo.");
+    setError(e.detail ?? t.solicitudDetalle.storageError);
   } else {
-    setError(e.detail ?? "Error al ejecutar accion");
+    setError(e.detail ?? t.solicitudDetalle.actionError);
   }
 };
 
@@ -313,15 +315,14 @@ export default function SolicitudDetalle() {
       fetchDetail();
     } catch (err: unknown) {
       const e = err as { status?: number; detail?: string; code?: string };
-      // Mostramos el detalle que ya normaliza api.upload()
-      setUploadError(e.detail ?? "Falló la subida del archivo. Intenta nuevamente.");
+      setUploadError(e.detail ?? t.solicitudDetalle.uploadFailed);
     } finally {
       setUploading(false);
     }
   };
 
   const handleDeleteFile = async (archivoId: number) => {
-    if (!confirm("Eliminar este archivo?")) return;
+    if (!confirm(t.solicitudDetalle.deleteFileConfirm)) return;
     setError(null);
     try {
       await api.delete<{ ok: boolean }>(`/archivos/${archivoId}`);
@@ -345,7 +346,7 @@ export default function SolicitudDetalle() {
   const [deleting, setDeleting] = useState(false);
   const handleDeleteSolicitud = async () => {
     if (!id) return;
-    if (!confirm("Eliminar esta solicitud eliminara todos los datos asociados (pagos, archivos, historial, asignaciones, resultados medicos). Esta accion es irreversible. Continuar?")) return;
+    if (!confirm(t.solicitudDetalle.deleteConfirm)) return;
     setDeleting(true);
     setError(null);
     try {
@@ -361,7 +362,7 @@ export default function SolicitudDetalle() {
   // ── Early returns ──
 
   if (loading) {
-    return <p style={{ color: "#666" }}>Cargando solicitud...</p>;
+    return <p style={{ color: "#666" }}>{t.solicitudDetalle.loading}</p>;
   }
 
   if (error && !detail) {
@@ -371,7 +372,7 @@ export default function SolicitudDetalle() {
           {error}
         </div>
         <button onClick={() => navigate("/app/solicitudes")} style={{ cursor: "pointer" }}>
-          Volver a la lista
+          {t.solicitudDetalle.backToList}
         </button>
       </div>
     );
@@ -389,16 +390,16 @@ if (!detail) {
           marginBottom: "1rem",
         }}
       >
-        No se pudo cargar la solicitud.
+        {t.solicitudDetalle.loadError}
         {error ? ` Detalle: ${error}` : ""}
       </div>
 
       <button onClick={() => fetchDetail()} style={{ cursor: "pointer", marginRight: "0.5rem" }}>
-        Reintentar
+        {t.solicitudDetalle.retry}
       </button>
 
       <button onClick={() => navigate("/app/solicitudes")} style={{ cursor: "pointer" }}>
-        Volver a la lista
+        {t.solicitudDetalle.backToList}
       </button>
     </div>
   );
@@ -420,7 +421,7 @@ if (!detail) {
           onClick={() => navigate("/app/solicitudes")}
           style={{ background: "none", border: "none", color: PRIMARY, cursor: "pointer", padding: 0, marginBottom: "0.5rem", fontSize: "0.9rem" }}
         >
-          &larr; Volver a solicitudes
+          &larr; {t.solicitudDetalle.backToList}
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <h2 style={{ margin: 0, color: PRIMARY }}>
@@ -471,7 +472,7 @@ if (!detail) {
           borderRadius: 4,
           marginBottom: "1rem",
         }}>
-          <strong>Motivo de cancelacion:</strong> {detail.motivo_cancelacion}
+          <strong>{t.solicitudDetalle.cancelledDate.replace(":", "")}</strong> {detail.motivo_cancelacion}
         </div>
       )}
 
@@ -479,13 +480,13 @@ if (!detail) {
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem", flexWrap: "wrap" }}>
         {can("CANCELAR") && activeModal !== "cancelar" && (
           <button onClick={() => openModal("cancelar")} style={actionBtnStyle("#b81414")}>
-            Cancelar solicitud
+            {t.solicitudDetalle.cancelRequest}
           </button>
         )}
         {isAdmin && (
           <button onClick={handleDeleteSolicitud} disabled={deleting}
             style={actionBtnStyle(deleting ? "#6c757d" : "#dc3545")}>
-            {deleting ? "Eliminando..." : "Eliminar solicitud"}
+            {deleting ? t.solicitudDetalle.deleting : t.solicitudDetalle.deleteRequest}
           </button>
         )}
       </div>
@@ -499,22 +500,22 @@ if (!detail) {
           marginBottom: "1rem",
           background: "#f8f9fa",
         }}>
-          <h3 style={{ margin: "0 0 0.75rem", color: "#6c757d" }}>Cancelar solicitud</h3>
+          <h3 style={{ margin: "0 0 0.75rem", color: "#6c757d" }}>{t.solicitudDetalle.cancelRequest}</h3>
           <p style={{ color: "#6c757d", fontSize: "0.85rem", marginBottom: "0.75rem" }}>
-            Se marcara como CANCELADA. Solo un admin podra revertir via Override.
+            {t.solicitudDetalle.cancelWarning}
           </p>
           <div style={{ marginBottom: "0.75rem" }}>
-            <label style={labelStyle}>Motivo (opcional)</label>
+            <label style={labelStyle}>{t.solicitudDetalle.cancelReason}</label>
             <input value={actionComentario} onChange={(e) => setActionComentario(e.target.value)}
-              placeholder="Razon de cancelacion..." style={{ ...inputStyle, maxWidth: 400 }} />
+              placeholder={t.solicitudDetalle.cancelPlaceholder} style={{ ...inputStyle, maxWidth: 400 }} />
           </div>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button disabled={actionLoading}
               onClick={() => executeAction("cancelar", { comentario: actionComentario || undefined })}
               style={actionBtnStyle(actionLoading ? "#6c757d" : "#dc3545")}>
-              {actionLoading ? "Procesando..." : "Confirmar cancelacion"}
+              {actionLoading ? t.common.processing : t.solicitudDetalle.confirmCancel}
             </button>
-            <button onClick={() => setActiveModal(null)} style={cancelBtnStyle}>Cancelar</button>
+            <button onClick={() => setActiveModal(null)} style={cancelBtnStyle}>{t.common.cancel}</button>
           </div>
         </div>
       )}
@@ -523,7 +524,7 @@ if (!detail) {
       <div style={{
       border: "1px solid #d1c4e9",
       borderRadius: 8,
-      padding: "1rem 1.25rem", // ✅ AQUÍ estaba el error
+      padding: "1rem 1.25rem",
       marginBottom: "1rem",
       background: "#f3eef8",
       width: "100%",
@@ -541,16 +542,16 @@ if (!detail) {
         gap: "0.5rem",
       }}
     >
-      <h3 style={{ margin: 0, color: PRIMARY }}>Datos del cliente</h3>
+      <h3 style={{ margin: 0, color: PRIMARY }}>{t.solicitudDetalle.clientData}</h3>
 
       {can("EDITAR_DATOS") && !editing ? (
         <button onClick={startEdit} style={actionBtnStyle("#6c757d")}>
-          Editar datos
+          {t.solicitudDetalle.editData}
         </button>
       ) : !editing ? (
         <span style={{ fontSize: "0.78rem", color: "#6c757d", fontStyle: "italic" }}>
           {detail.estado_operativo === "CANCELADO" || detail.estado_operativo === "CERRADO"
-            ? "Solicitud finalizada."
+            ? t.solicitudDetalle.requestCompleted
             : ""}
         </span>
       ) : null}
@@ -565,33 +566,33 @@ if (!detail) {
         }}
       >
       <div>
-        <span style={labelStyle}>Tipo documento: </span>
+        <span style={labelStyle}>{t.solicitudDetalle.docType} </span>
         <span style={valueStyle}>{detail.cliente.tipo_documento ?? "-"}</span>
       </div>
       <div>
-        <span style={labelStyle}>Nro documento: </span>
+        <span style={labelStyle}>{t.solicitudDetalle.docNumber} </span>
         <span style={valueStyle}>{detail.cliente.numero_documento ?? "-"}</span>
       </div>
       <div>
-        <span style={labelStyle}>Nombre: </span>
+        <span style={labelStyle}>{t.solicitudDetalle.fullName} </span>
         <span style={valueStyle}>{detail.cliente.nombre}</span>
       </div>
 
       <div>
-        <span style={labelStyle}>Celular: </span>
+        <span style={labelStyle}>{t.solicitudDetalle.phone} </span>
         <span style={valueStyle}>{detail.cliente.celular ?? "-"}</span>
       </div>
       <div>
-        <span style={labelStyle}>Email: </span>
+        <span style={labelStyle}>{t.solicitudDetalle.email} </span>
         <span style={valueStyle}>{detail.cliente.email ?? "-"}</span>
       </div>
       <div>
-        <span style={labelStyle}>Fecha nacimiento: </span>
+        <span style={labelStyle}>{t.solicitudDetalle.birthDate} </span>
         <span style={valueStyle}>{detail.cliente.fecha_nacimiento ?? "-"}</span>
       </div>
 
       <div style={{ gridColumn: "1 / -1" }}>
-        <span style={labelStyle}>Direccion: </span>
+        <span style={labelStyle}>{t.solicitudDetalle.address} </span>
         <span style={valueStyle}>{detail.cliente.direccion ?? "-"}</span>
       </div>
     </div>
@@ -599,8 +600,8 @@ if (!detail) {
     {/* APODERADO (max 3 columnas) */}
     {detail.apoderado && (
       <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid #d1c4e9" }}>
-        
-        <h3 style={{ margin: 0, color: PRIMARY }}>Datos del Apoderado</h3>
+
+        <h3 style={{ margin: 0, color: PRIMARY }}>{t.solicitudDetalle.representativeData}</h3>
 
         <div
           style={{
@@ -613,39 +614,39 @@ if (!detail) {
           }}
         >
           <div>
-            <span style={labelStyle}>Tipo Documento: </span>
+            <span style={labelStyle}>{t.solicitudDetalle.docType} </span>
             <span style={valueStyle}>
               {detail.apoderado.tipo_documento}
             </span>
           </div>
           <div>
-            <span style={labelStyle}>Nro Documento: </span>
+            <span style={labelStyle}>{t.solicitudDetalle.docNumber} </span>
             <span style={valueStyle}>
               {detail.apoderado.numero_documento}
             </span>
           </div>
           <div>
-            <span style={labelStyle}>Nombre: </span>
+            <span style={labelStyle}>{t.solicitudDetalle.fullName} </span>
             <span style={valueStyle}>
               {detail.apoderado.nombres} {detail.apoderado.apellidos}
             </span>
           </div>
           <div>
-            <span style={labelStyle}>Celular: </span>
+            <span style={labelStyle}>{t.solicitudDetalle.phone} </span>
             <span style={valueStyle}>{detail.apoderado.celular_1 ?? "-"}</span>
           </div>
 
           <div>
-            <span style={labelStyle}>Email: </span>
+            <span style={labelStyle}>{t.solicitudDetalle.email} </span>
             <span style={valueStyle}>{detail.apoderado.email ?? "-"}</span>
           </div>
           <div>
-            <span style={labelStyle}>Fecha nacimiento: </span>
+            <span style={labelStyle}>{t.solicitudDetalle.birthDate} </span>
             <span style={valueStyle}>{detail.apoderado.fecha_nacimiento ?? "-"}</span>
           </div>
 
           <div style={{ gridColumn: "1 / -1" }}>
-            <span style={labelStyle}>Direccion: </span>
+            <span style={labelStyle}>{t.solicitudDetalle.address} </span>
             <span style={valueStyle}>{detail.apoderado.direccion ?? "-"}</span>
           </div>
         </div>
@@ -655,7 +656,7 @@ if (!detail) {
     {/* PROMOTOR (ya estaba en 3 columnas, lo dejamos igual) */}
     {detail.promotor && (
       <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid #d1c4e9" }}>
-        <h3 style={{ margin: 0, color: PRIMARY }}>Datos del Promotor</h3>
+        <h3 style={{ margin: 0, color: PRIMARY }}>{t.solicitudDetalle.promoterData}</h3>
 
         <div
           style={{
@@ -672,7 +673,7 @@ if (!detail) {
             <span style={valueStyle}>{detail.promotor.tipo_promotor}</span>
           </div>
           <div>
-            <span style={labelStyle}>Nombre: </span>
+            <span style={labelStyle}>{t.solicitudDetalle.fullName} </span>
             <span style={valueStyle}>{detail.promotor.nombre}</span>
           </div>
           <div>
@@ -681,11 +682,11 @@ if (!detail) {
           </div>
 
           <div>
-            <span style={labelStyle}>Email: </span>
+            <span style={labelStyle}>{t.solicitudDetalle.email} </span>
             <span style={valueStyle}>{detail.promotor.email ?? "-"}</span>
           </div>
           <div>
-            <span style={labelStyle}>Celular: </span>
+            <span style={labelStyle}>{t.solicitudDetalle.phone} </span>
             <span style={valueStyle}>{detail.promotor.celular ?? "-"}</span>
           </div>
           <div>
@@ -700,20 +701,20 @@ if (!detail) {
     <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid #d1c4e9" }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "0.5rem" }}>
         <div>
-          <span style={labelStyle}>Creado: </span>
+          <span style={labelStyle}>{t.solicitudDetalle.created} </span>
           <span style={valueStyle}>{new Date(detail.created_at).toLocaleString()}</span>
         </div>
 
         {detail.fecha_cierre && (
           <div>
-            <span style={labelStyle}>Fecha cierre: </span>
+            <span style={labelStyle}>{t.solicitudDetalle.closedDate} </span>
             <span style={valueStyle}>{new Date(detail.fecha_cierre).toLocaleString()}</span>
           </div>
         )}
 
         {detail.fecha_cancelacion && (
           <div>
-            <span style={labelStyle}>Fecha cancelacion: </span>
+            <span style={labelStyle}>{t.solicitudDetalle.cancelledDate} </span>
             <span style={valueStyle}>{new Date(detail.fecha_cancelacion).toLocaleString()}</span>
           </div>
         )}
@@ -721,14 +722,14 @@ if (!detail) {
 
       {detail.comentario && (
         <div style={{ marginTop: "0.5rem" }}>
-          <span style={labelStyle}>Comentario: </span>
+          <span style={labelStyle}>{t.solicitudDetalle.comment} </span>
           <span style={valueStyle}>{detail.comentario}</span>
         </div>
       )}
 
       {detail.comentario_admin && (
         <div style={{ marginTop: "0.5rem" }}>
-          <span style={labelStyle}>Comentario admin: </span>
+          <span style={labelStyle}>{t.solicitudDetalle.adminComment} </span>
           <span style={valueStyle}>{detail.comentario_admin}</span>
         </div>
       )}
@@ -741,37 +742,37 @@ if (!detail) {
           ...neutralSectionStyle,
           background: "#f8f9fa",
         }}>
-          <h3 style={{ margin: "0 0 0.75rem", color: PRIMARY }}>Editar datos</h3>
+          <h3 style={{ margin: "0 0 0.75rem", color: PRIMARY }}>{t.solicitudDetalle.editData}</h3>
           <p style={{ fontSize: "0.82rem", color: "#6c757d", margin: "0 0 0.75rem" }}>
-            Deje en blanco los campos que no desea modificar.
+            {t.solicitudDetalle.editHint}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <div>
-              <label style={labelStyle}>Nombres del cliente</label>
+              <label style={labelStyle}>{t.solicitudDetalle.clientFirstName}</label>
               <input value={editData.cliente_nombres ?? ""} onChange={(e) => setEditData({ ...editData, cliente_nombres: e.target.value })}
                 placeholder={detail.cliente.nombre ?? "Nombres"} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Apellidos del cliente</label>
+              <label style={labelStyle}>{t.solicitudDetalle.clientLastName}</label>
               <input value={editData.cliente_apellidos ?? ""} onChange={(e) => setEditData({ ...editData, cliente_apellidos: e.target.value })}
                 placeholder="Apellidos" style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Celular del cliente</label>
+              <label style={labelStyle}>{t.solicitudDetalle.clientPhone}</label>
               <input value={editData.cliente_celular ?? ""} onChange={(e) => setEditData({ ...editData, cliente_celular: e.target.value })}
                 placeholder="Celular" style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Email del cliente</label>
+              <label style={labelStyle}>{t.solicitudDetalle.clientEmail}</label>
               <input value={editData.cliente_email ?? ""} onChange={(e) => setEditData({ ...editData, cliente_email: e.target.value })}
                 placeholder="correo@ejemplo.com" style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Fecha nacimiento del cliente</label>
+              <label style={labelStyle}>{t.solicitudDetalle.clientBirthDate}</label>
               <input type="date" placeholder="dd-mm-aaaa" value={editData.cliente_fecha_nacimiento ?? ""} onChange={(e) => setEditData({ ...editData, cliente_fecha_nacimiento: e.target.value })} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Direccion del cliente</label>
+              <label style={labelStyle}>{t.solicitudDetalle.clientAddress}</label>
               <input value={editData.cliente_direccion ?? ""} onChange={(e) => setEditData({ ...editData, cliente_direccion: e.target.value })}
                 placeholder="Direccion" style={inputStyle} />
             </div>
@@ -780,34 +781,34 @@ if (!detail) {
           {/* Apoderado fields */}
           {detail.apoderado && (
             <>
-              <h4 style={{ margin: "0.75rem 0 0.5rem", color: PRIMARY, fontSize: "0.9rem" }}>Apoderado</h4>
+              <h4 style={{ margin: "0.75rem 0 0.5rem", color: PRIMARY, fontSize: "0.9rem" }}>{t.solicitudDetalle.representative}</h4>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                 <div>
-                  <label style={labelStyle}>Nombres del apoderado</label>
+                  <label style={labelStyle}>{t.solicitudDetalle.repFirstName}</label>
                   <input value={editData.apoderado_nombres || ""} onChange={(e) => setEditData({ ...editData, apoderado_nombres: e.target.value })}
                     placeholder={detail.apoderado?.nombres || "Nombres"} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Apellidos del apoderado</label>
+                  <label style={labelStyle}>{t.solicitudDetalle.repLastName}</label>
                   <input value={editData.apoderado_apellidos || ""} onChange={(e) => setEditData({ ...editData, apoderado_apellidos: e.target.value })}
                     placeholder={detail.apoderado?.apellidos ||"Apellidos"} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Celular del apoderado</label>
+                  <label style={labelStyle}>{t.solicitudDetalle.repPhone}</label>
                   <input value={editData.apoderado_celular ?? ""} onChange={(e) => setEditData({ ...editData, apoderado_celular: e.target.value })}
                     placeholder="Celular" style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Email del apoderado</label>
+                  <label style={labelStyle}>{t.solicitudDetalle.repEmail}</label>
                   <input value={editData.apoderado_email ?? ""} onChange={(e) => setEditData({ ...editData, apoderado_email: e.target.value })}
                     placeholder="correo@ejemplo.com" style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Fecha nacimiento del apoderado</label>
+                  <label style={labelStyle}>{t.solicitudDetalle.repBirthDate}</label>
                   <input type="date" placeholder="dd-mm-aaaa" value={editData.apoderado_fecha_nacimiento ?? ""} onChange={(e) => setEditData({ ...editData, apoderado_fecha_nacimiento: e.target.value })} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Direccion del apoderado</label>
+                  <label style={labelStyle}>{t.solicitudDetalle.repAddress}</label>
                   <input value={editData.apoderado_direccion ?? ""} onChange={(e) => setEditData({ ...editData, apoderado_direccion: e.target.value })}
                     placeholder="Direccion" style={inputStyle} />
                 </div>
@@ -816,15 +817,15 @@ if (!detail) {
           )}
 
           <div style={{ marginTop: "0.75rem" }}>
-            <label style={labelStyle}>Comentario</label>
+            <label style={labelStyle}>{t.solicitudDetalle.comment}</label>
             <textarea value={editData.comentario ?? ""} onChange={(e) => setEditData({ ...editData, comentario: e.target.value })}
               rows={3} style={{ ...inputStyle, resize: "vertical" }} />
           </div>
           <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
             <button onClick={saveEdit} disabled={saving} style={actionBtnStyle(saving ? "#6c757d" : "#198754")}>
-              {saving ? "Guardando..." : "Guardar"}
+              {saving ? t.common.saving : t.common.save}
             </button>
-            <button onClick={cancelEdit} style={cancelBtnStyle}>Cancelar</button>
+            <button onClick={cancelEdit} style={cancelBtnStyle}>{t.common.cancel}</button>
           </div>
         </div>
       )}
@@ -880,7 +881,7 @@ if (!detail) {
 
       {/* ─── Archivos (siempre visible) ─── */}
       <div style={neutralSectionStyle}>
-        <h3 style={{ margin: "0 0 0.75rem", color: PRIMARY }}>Archivos</h3>
+        <h3 style={{ margin: "0 0 0.75rem", color: PRIMARY }}>{t.solicitudDetalle.files}</h3>
 
         {/* Upload form */}
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap", marginBottom: "0.75rem" }}>
@@ -891,20 +892,19 @@ if (!detail) {
           />
           <select value={uploadTipo} onChange={(e) => setUploadTipo(e.target.value)}
             style={{ ...inputStyle, width: "auto" }}>
-            <option value="DOCUMENTO">Documento</option>
-            <option value="EVIDENCIA_PAGO">Evidencia de pago</option>
-            <option value="OTROS">Otros</option>
+            <option value="DOCUMENTO">{t.solicitudDetalle.fileDocument}</option>
+            <option value="EVIDENCIA_PAGO">{t.solicitudDetalle.filePaymentEvidence}</option>
+            <option value="OTROS">{t.solicitudDetalle.fileOther}</option>
           </select>
           <button
             disabled={!uploadFile || uploading}
             onClick={handleUploadFile}
             style={actionBtnStyle(uploading || !uploadFile ? "#6c757d" : "#0d6efd")}
           >
-            {uploading ? "Subiendo..." : "Subir archivo"}
+            {uploading ? t.solicitudDetalle.uploading : t.solicitudDetalle.uploadFile}
           </button>
         </div>
 
-        {/* ⚠️ ERROR DE UPLOAD SOLO PARA ESTA SECCIÓN */}
         {uploadError && (
           <div
             style={{
@@ -926,10 +926,10 @@ if (!detail) {
           <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={thStyle}>Nombre</th>
-                <th style={thStyle}>Tipo</th>
-                <th style={thStyle}>Tamano</th>
-                <th style={thStyle}>Acciones</th>
+                <th style={thStyle}>{t.solicitudDetalle.fileName}</th>
+                <th style={thStyle}>{t.common.type}</th>
+                <th style={thStyle}>{t.common.size}</th>
+                <th style={thStyle}>{t.common.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -949,13 +949,13 @@ if (!detail) {
                       onClick={() => handleDownloadFile(a.archivo_id, a.nombre)}
                       style={{ ...actionBtnStyle("#0d6efd"), padding: "0.2rem 0.5rem", fontSize: "0.8rem", marginRight: "0.3rem" }}
                     >
-                      Descargar
+                      {t.common.download}
                     </button>
                     <button
                       onClick={() => handleDeleteFile(a.archivo_id)}
                       style={{ ...actionBtnStyle("#dc3545"), padding: "0.2rem 0.5rem", fontSize: "0.8rem" }}
                     >
-                      Eliminar
+                      {t.common.delete}
                     </button>
                   </td>
                 </tr>
@@ -964,24 +964,24 @@ if (!detail) {
           </table>
           </div>
         ) : (
-          <p style={{ color: "#999", fontSize: "0.85rem", margin: 0 }}>Sin archivos adjuntos.</p>
+          <p style={{ color: "#999", fontSize: "0.85rem", margin: 0 }}>{t.solicitudDetalle.noFiles}</p>
         )}
       </div>
 
       {/* ─── Historial de cambios (siempre visible) ─── */}
       <div style={neutralSectionStyle}>
-        <h3 style={{ margin: "0 0 0.75rem", color: PRIMARY }}>Historial de cambios</h3>
+        <h3 style={{ margin: "0 0 0.75rem", color: PRIMARY }}>{t.solicitudDetalle.changeHistory}</h3>
         {detail.historial.length > 0 ? (
             <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={thStyle}>Fecha</th>
-                <th style={thStyle}>Campo</th>
-                <th style={thStyle}>Anterior</th>
-                <th style={thStyle}>Nuevo</th>
-                <th style={thStyle}>Usuario</th>
-                <th style={thStyle}>Comentario</th>
+                <th style={thStyle}>{t.common.date}</th>
+                <th style={thStyle}>{t.solicitudDetalle.field}</th>
+                <th style={thStyle}>{t.solicitudDetalle.previous}</th>
+                <th style={thStyle}>{t.solicitudDetalle.newValue}</th>
+                <th style={thStyle}>{t.solicitudDetalle.user}</th>
+                <th style={thStyle}>{t.solicitudDetalle.comment}</th>
               </tr>
             </thead>
             <tbody>
@@ -999,7 +999,7 @@ if (!detail) {
           </table>
           </div>
         ) : (
-          <p style={{ color: "#999", fontSize: "0.85rem", margin: 0 }}>Sin cambios registrados.</p>
+          <p style={{ color: "#999", fontSize: "0.85rem", margin: 0 }}>{t.solicitudDetalle.noChanges}</p>
         )}
       </div>
     </div>
